@@ -48,9 +48,8 @@ interface PostgreSqlErrorShape {
   code?: string;
   constraint?: string;
   table?: string;
+  cause?: unknown;
 }
-
-type UniqueViolationError = PostgreSqlErrorShape & { code: "23505" };
 
 function assertPostgresConnectionString(value: string): string {
   const trimmed = value.trim();
@@ -64,15 +63,35 @@ function isPostgreSqlErrorShape(value: unknown): value is PostgreSqlErrorShape {
   return typeof value === "object" && value !== null;
 }
 
-export function isUniqueViolation(
-  error: unknown,
-): error is UniqueViolationError {
-  return isPostgreSqlErrorShape(error) && error.code === "23505";
+function findPostgreSqlError(error: unknown): PostgreSqlErrorShape | undefined {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+
+  for (let depth = 0; depth < 8; depth += 1) {
+    if (!isPostgreSqlErrorShape(current) || seen.has(current)) return undefined;
+    seen.add(current);
+
+    if (typeof current.code === "string") return current;
+    current = current.cause;
+  }
+
+  return undefined;
+}
+
+export function postgresErrorCode(error: unknown): string | undefined {
+  return findPostgreSqlError(error)?.code;
+}
+
+export function isUniqueViolation(error: unknown): boolean {
+  return postgresErrorCode(error) === "23505";
 }
 
 export function uniqueViolationConstraint(error: unknown): string | undefined {
-  if (!isUniqueViolation(error)) return undefined;
-  return typeof error.constraint === "string" ? error.constraint : undefined;
+  const postgresError = findPostgreSqlError(error);
+  if (postgresError?.code !== "23505") return undefined;
+  return typeof postgresError.constraint === "string"
+    ? postgresError.constraint
+    : undefined;
 }
 
 function optionalArticleHeadValues(input: NewArticleHead): {
