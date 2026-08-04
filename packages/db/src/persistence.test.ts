@@ -7,6 +7,7 @@ import {
   type ArticlePersistenceRepository,
   type ArticlePersistenceTransaction,
   type ArticleSnapshot,
+  type ArticleSourceLink,
   type NewArticleHead,
   type NewArticleVersion,
   type StoredArticleHead,
@@ -17,6 +18,7 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
   readonly articles = new Map<string, NewArticleHead & StoredArticleHead>();
   readonly articleIdByCanonicalUrl = new Map<string, string>();
   readonly articleIdBySourceIdentity = new Map<string, string>();
+  readonly sourceLinks = new Map<string, ArticleSourceLink>();
   readonly versions: NewArticleVersion[] = [];
   transactionCount = 0;
   #nextId = 1;
@@ -29,6 +31,7 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
     const transaction: ArticlePersistenceTransaction = {
       findArticleForUpdate: async (identity) => this.find(identity),
       insertArticle: async (input) => this.insert(input),
+      upsertArticleSourceLink: async (input) => this.upsertSourceLink(input),
       insertArticleVersion: async (input) => {
         const duplicate = this.versions.some(
           (version) =>
@@ -45,7 +48,10 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
     return operation(transaction);
   }
 
-  private sourceIdentity(identity: ArticleIdentity): string | undefined {
+  private sourceIdentity(identity: {
+    sourceId: string;
+    sourceArticleId?: string;
+  }): string | undefined {
     return identity.sourceArticleId
       ? `${identity.sourceId}:${identity.sourceArticleId}`
       : undefined;
@@ -73,23 +79,48 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
       throw new Error("duplicate canonical URL");
     }
 
-    const sourceIdentity = this.sourceIdentity(input);
-    if (sourceIdentity && this.articleIdBySourceIdentity.has(sourceIdentity)) {
-      throw new Error("duplicate source identity");
-    }
-
     const id = `article-${this.#nextId}`;
     this.#nextId += 1;
     const article = { ...input, id };
     this.articles.set(id, article);
     this.articleIdByCanonicalUrl.set(input.canonicalUrl, id);
-    if (sourceIdentity) this.articleIdBySourceIdentity.set(sourceIdentity, id);
 
     return {
       id,
       currentContentHash: input.currentContentHash,
       currentVersionNumber: input.currentVersionNumber,
     };
+  }
+
+  private upsertSourceLink(input: ArticleSourceLink): void {
+    const key = `${input.articleId}:${input.sourceId}`;
+    const sourceIdentity = this.sourceIdentity(input);
+    const conflictingArticleId = sourceIdentity
+      ? this.articleIdBySourceIdentity.get(sourceIdentity)
+      : undefined;
+
+    if (conflictingArticleId && conflictingArticleId !== input.articleId) {
+      throw new Error("duplicate source identity");
+    }
+
+    const existing = this.sourceLinks.get(key);
+    const link: ArticleSourceLink = {
+      articleId: input.articleId,
+      sourceId: input.sourceId,
+      observedAt: input.observedAt,
+    };
+    if (input.sourceArticleId) link.sourceArticleId = input.sourceArticleId;
+
+    if (existing?.sourceArticleId && existing.sourceArticleId !== input.sourceArticleId) {
+      this.articleIdBySourceIdentity.delete(
+        `${existing.sourceId}:${existing.sourceArticleId}`,
+      );
+    }
+
+    this.sourceLinks.set(key, link);
+    if (sourceIdentity) {
+      this.articleIdBySourceIdentity.set(sourceIdentity, input.articleId);
+    }
   }
 
   private update(input: UpdateArticleHead): void {
@@ -108,24 +139,7 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
       this.articleIdByCanonicalUrl.set(input.canonicalUrl, input.articleId);
     }
 
-    const oldSourceIdentity = this.sourceIdentity(article);
-    const newSourceIdentity = this.sourceIdentity(input);
-    if (oldSourceIdentity !== newSourceIdentity) {
-      if (oldSourceIdentity) this.articleIdBySourceIdentity.delete(oldSourceIdentity);
-      if (newSourceIdentity) {
-        const conflictingSourceArticle =
-          this.articleIdBySourceIdentity.get(newSourceIdentity);
-        if (conflictingSourceArticle && conflictingSourceArticle !== input.articleId) {
-          throw new Error("duplicate source identity");
-        }
-        this.articleIdBySourceIdentity.set(newSourceIdentity, input.articleId);
-      }
-    }
-
-    article.sourceId = input.sourceId;
     article.canonicalUrl = input.canonicalUrl;
-    if (input.sourceArticleId) article.sourceArticleId = input.sourceArticleId;
-    else delete article.sourceArticleId;
     article.title = input.title;
     article.authorStatus = input.authorStatus;
     article.currentContentHash = input.currentContentHash;
@@ -164,7 +178,7 @@ function snapshot(overrides: Partial<ArticleSnapshot> = {}): ArticleSnapshot {
   };
 }
 
-test("creates an article and immutable version in one transaction", async () => {
+test("creates an article, source link, and immutable version in one transaction", async () => {
   const repository = new InMemoryArticleRepository();
   const result = await persistArticleSnapshot(repository, snapshot());
 
@@ -175,6 +189,7 @@ test("creates an article and immutable version in one transaction", async () => 
   });
   assert.equal(repository.transactionCount, 1);
   assert.equal(repository.articles.size, 1);
+  assert.equal(repository.sourceLinks.size, 1);
   assert.equal(repository.versions.length, 1);
   assert.equal(repository.versions[0]?.contentHash, "hash-v1");
 });
@@ -200,6 +215,10 @@ test("refreshes article metadata without appending an unchanged version", async 
   assert.equal(
     repository.articles.get("article-1")?.title,
     "Google tạm dừng AI tạo ảnh - cập nhật metadata",
+  );
+  assert.equal(
+    repository.sourceLinks.get("article-1:tto-tech")?.observedAt,
+    observedAt,
   );
 });
 
@@ -259,6 +278,33 @@ test("resolves by source identity and refreshes a changed canonical URL", async 
   assert.equal(
     repository.articleIdByCanonicalUrl.has("https://tuoitre.vn/example.htm"),
     false,
+  );
+});
+
+test("links the same canonical article to another feed without overwriting source", async () => {
+  const repository = new InMemoryArticleRepository();
+  await persistArticleSnapshot(repository, snapshot());
+
+  const result = await persistArticleSnapshot(
+    repository,
+    snapshot({
+      sourceId: "tto-ent",
+      sourceArticleId: "ent-100260801212001232",
+      observedAt: new Date("2026-08-04T05:00:00Z"),
+    }),
+  );
+
+  assert.equal(result.outcome, "unchanged");
+  assert.equal(repository.articles.size, 1);
+  assert.equal(repository.versions.length, 1);
+  assert.equal(repository.sourceLinks.size, 2);
+  assert.equal(
+    repository.sourceLinks.get("article-1:tto-tech")?.sourceId,
+    "tto-tech",
+  );
+  assert.equal(
+    repository.sourceLinks.get("article-1:tto-ent")?.sourceId,
+    "tto-ent",
   );
 });
 
