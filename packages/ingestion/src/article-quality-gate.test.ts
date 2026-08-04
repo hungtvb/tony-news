@@ -23,7 +23,7 @@ test("quality decision blocks broad page fallback", () => {
   assert.equal(decideArticleQuality(false, []), "failed");
 });
 
-test("publisher-as-author is removed and requires review", async () => {
+test("publisher-as-author is removed and represented as author unknown", async () => {
   const result = await fetchAndInspectArticle(vnExpressTarget, {
     fetchImpl: async () =>
       new Response(
@@ -43,7 +43,7 @@ test("publisher-as-author is removed and requires review", async () => {
   assert.equal(result.ok, true);
   assert.equal(result.authorStatus, "unknown");
   assert.equal(result.author, undefined);
-  assert.equal(result.qualityDecision, "review");
+  assert.equal(result.qualityDecision, "ready");
   assert.deepEqual(result.qualityWarnings, [
     "publisher-reported-as-author",
   ]);
