@@ -22,7 +22,17 @@ export type ArticleQualityWarning =
   | "high-paragraph-count"
   | "publisher-reported-as-author";
 
+export type ArticleQualityDecision =
+  | "ready"
+  | "review"
+  | "fallback-required"
+  | "failed";
+
+export type ArticleAuthorStatus = "reported" | "unknown";
+
 export interface ArticleInspectionResult extends BaseInspectionResult {
+  qualityDecision: ArticleQualityDecision;
+  authorStatus: ArticleAuthorStatus;
   qualityWarnings?: ArticleQualityWarning[];
 }
 
@@ -70,6 +80,14 @@ function normalizedOptional(value: string | undefined): string | undefined {
   return value ? normalizeExtractedText(value) : undefined;
 }
 
+function isPublisherAuthor(publisher: Publisher, author: string): boolean {
+  return (
+    author.localeCompare(publisher, "vi", {
+      sensitivity: "base",
+    }) === 0
+  );
+}
+
 export function extractNormalizedArticle(
   target: ArticleTarget,
   html: string,
@@ -81,7 +99,7 @@ export function extractNormalizedArticle(
   };
   const author = normalizedOptional(article.author);
 
-  if (author) {
+  if (author && !isPublisherAuthor(target.publisher, author)) {
     normalized.author = author;
   } else {
     delete normalized.author;
@@ -92,6 +110,7 @@ export function extractNormalizedArticle(
 
 function collectQualityWarnings(
   result: BaseInspectionResult,
+  publisherAsAuthor: boolean,
 ): ArticleQualityWarning[] {
   const warnings: ArticleQualityWarning[] = [];
 
@@ -103,16 +122,33 @@ function collectQualityWarnings(
     warnings.push("high-paragraph-count");
   }
 
-  if (
-    result.author &&
-    normalizeExtractedText(result.author).localeCompare(result.publisher, "vi", {
-      sensitivity: "base",
-    }) === 0
-  ) {
+  if (publisherAsAuthor) {
     warnings.push("publisher-reported-as-author");
   }
 
   return warnings;
+}
+
+export function decideArticleQuality(
+  ok: boolean,
+  warnings: readonly ArticleQualityWarning[],
+): ArticleQualityDecision {
+  if (!ok) {
+    return "failed";
+  }
+
+  if (
+    warnings.includes("broad-page-paragraph-fallback") ||
+    warnings.includes("high-paragraph-count")
+  ) {
+    return "fallback-required";
+  }
+
+  if (warnings.length > 0) {
+    return "review";
+  }
+
+  return "ready";
 }
 
 export async function fetchAndInspectArticle(
@@ -123,20 +159,34 @@ export async function fetchAndInspectArticle(
   } = {},
 ): Promise<ArticleInspectionResult> {
   const result = await fetchBaseArticle(target, options);
-  const normalized: ArticleInspectionResult = { ...result };
+  const normalized: ArticleInspectionResult = {
+    ...result,
+    authorStatus: "unknown",
+    qualityDecision: result.ok ? "ready" : "failed",
+  };
 
   if (result.title) {
     normalized.title = normalizeExtractedText(result.title);
   }
 
-  if (result.author) {
-    normalized.author = normalizeExtractedText(result.author);
+  const author = normalizedOptional(result.author);
+  const publisherAsAuthor = Boolean(
+    author && isPublisherAuthor(result.publisher, author),
+  );
+
+  if (author && !publisherAsAuthor) {
+    normalized.author = author;
+    normalized.authorStatus = "reported";
+  } else {
+    delete normalized.author;
+    normalized.authorStatus = "unknown";
   }
 
-  const warnings = collectQualityWarnings(normalized);
+  const warnings = collectQualityWarnings(normalized, publisherAsAuthor);
   if (warnings.length > 0) {
     normalized.qualityWarnings = warnings;
   }
+  normalized.qualityDecision = decideArticleQuality(result.ok, warnings);
 
   return normalized;
 }
