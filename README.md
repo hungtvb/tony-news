@@ -77,17 +77,20 @@ Only `qualityDecision: ready` is eligible for automatic downstream persistence a
 The Phase 0 database schema uses Drizzle ORM and PostgreSQL. It contains:
 
 - sources and source endpoints;
-- mutable article heads;
+- canonical mutable article heads;
+- `article_sources` provenance links, allowing one article to appear in multiple feeds/categories;
 - immutable article versions;
 - ingestion runs with idempotency keys;
 - typed processing failures.
 
+Article lookup prefers a stable `(source_id, source_article_id)` link when available and falls back to canonical URL. Two feeds that discover the same canonical URL create two provenance links, not two articles or two content versions.
+
 Article persistence follows three outcomes:
 
 ```text
-new identity + content hash       → created, version 1
-existing identity + same hash     → unchanged, refresh head metadata
-existing identity + changed hash  → append version N+1, advance head
+new identity + content hash       → create article + source link + version 1
+existing identity + same hash     → upsert source link, refresh head metadata
+existing identity + changed hash  → upsert source link, append version N+1
 ```
 
 AI is not part of this transaction. A persisted article version can be processed later when an AI route is available.
@@ -98,9 +101,9 @@ Generate a migration after changing the schema:
 pnpm db:generate
 ```
 
-Generated SQL and Drizzle metadata under `packages/db/drizzle` must be committed. CI regenerates migrations and fails when the committed output is stale.
+Generated SQL and Drizzle metadata under `packages/db/drizzle` must be committed. CI regenerates migrations and fails for tracked drift or untracked generated files.
 
-The initial migration has not yet been applied to a production Supabase project.
+The initial migration has not yet been applied to a preview or production Supabase project.
 
 ## Structure diagnostics
 
@@ -134,7 +137,8 @@ The regular polling path does not use Browser Run `/crawl`; crawl remains reserv
 pnpm typecheck
 pnpm test
 pnpm db:generate
-git diff --exit-code -- packages/db/drizzle
+status=$(git status --porcelain -- packages/db/drizzle)
+test -z "$status"
 ```
 
 ## Documentation
