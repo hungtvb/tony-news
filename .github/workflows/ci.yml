@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           set +e
-          pnpm run rss:smoke -- --json > rss-smoke.json 2>&1
+          node --experimental-strip-types apps/worker/src/rss-smoke.ts --json > rss-smoke.json 2>&1
           status=$?
           cat rss-smoke.json
           echo "exit_code=$status" >> "$GITHUB_OUTPUT"
