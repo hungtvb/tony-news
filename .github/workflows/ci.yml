@@ -6,7 +6,7 @@ on:
   pull_request:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify:
@@ -15,8 +15,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref || github.ref }}
 
       - uses: actions/setup-node@v4
         with:
@@ -36,30 +34,16 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      - name: Generate database migration
-        run: pnpm db:generate
-
-      - name: Commit generated migration on persistence branch
-        if: github.event_name == 'pull_request' && github.head_ref == 'feat/persistence-schema-idempotency'
+      - name: Verify database migration is reproducible
         shell: bash
         run: |
-          git add packages/db/drizzle
-          if git diff --cached --quiet; then
-            echo "Migration already committed."
-            exit 0
+          pnpm db:generate
+          status=$(git status --porcelain -- packages/db/drizzle)
+          if [ -n "$status" ]; then
+            echo "$status"
+            git diff -- packages/db/drizzle
+            exit 1
           fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore: commit generated initial PostgreSQL migration"
-          git push origin HEAD:${GITHUB_HEAD_REF}
-
-      - name: Upload generated database migration
-        uses: actions/upload-artifact@v4
-        with:
-          name: generated-db-migration
-          path: packages/db/drizzle
-          if-no-files-found: error
-          retention-days: 14
 
       - name: Live RSS smoke
         id: live-rss-smoke
