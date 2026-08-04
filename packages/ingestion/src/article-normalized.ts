@@ -1,20 +1,27 @@
+import { createHash } from "node:crypto";
+
 import {
   extractNormalizedArticle as extractBaseArticle,
-  fetchAndInspectArticle as fetchBaseArticle,
   validateArticleUrl,
-  type ArticleExtractionStrategy,
+  type ArticleExtractionStrategy as BaseArticleExtractionStrategy,
   type ArticleInspectionResult as BaseInspectionResult,
   type ArticleTarget,
-  type NormalizedArticle,
+  type NormalizedArticle as BaseNormalizedArticle,
   type Publisher,
 } from "./article.ts";
+import { extractPublisherContent } from "./publisher-adapters.ts";
 
-export type {
-  ArticleExtractionStrategy,
-  ArticleTarget,
-  NormalizedArticle,
-  Publisher,
-};
+export type ArticleExtractionStrategy =
+  | BaseArticleExtractionStrategy
+  | "publisher-container";
+
+export interface NormalizedArticle
+  extends Omit<BaseNormalizedArticle, "extractionStrategy"> {
+  extractionStrategy: ArticleExtractionStrategy;
+  extractionSelector?: string;
+}
+
+export type { ArticleTarget, Publisher };
 export { validateArticleUrl };
 
 export type ArticleQualityWarning =
@@ -30,7 +37,10 @@ export type ArticleQualityDecision =
 
 export type ArticleAuthorStatus = "reported" | "unknown";
 
-export interface ArticleInspectionResult extends BaseInspectionResult {
+export interface ArticleInspectionResult
+  extends Omit<BaseInspectionResult, "extractionStrategy"> {
+  extractionStrategy?: ArticleExtractionStrategy;
+  extractionSelector?: string;
   qualityDecision: ArticleQualityDecision;
   authorStatus: ArticleAuthorStatus;
   qualityWarnings?: ArticleQualityWarning[];
@@ -67,9 +77,7 @@ export function normalizeExtractedText(value: string): string {
 
   for (let pass = 0; pass < 3; pass += 1) {
     const decoded = decodeHtmlEntitiesOnce(current);
-    if (decoded === current) {
-      break;
-    }
+    if (decoded === current) break;
     current = decoded;
   }
 
@@ -88,17 +96,29 @@ function isPublisherAuthor(publisher: Publisher, author: string): boolean {
   );
 }
 
-export function extractNormalizedArticle(
+function normalizeArticleFromBase(
   target: ArticleTarget,
   html: string,
+  baseArticle: BaseNormalizedArticle,
 ): NormalizedArticle {
-  const article = extractBaseArticle(target, html);
+  const publisherContent = extractPublisherContent(target.publisher, html);
+  const text = publisherContent?.text ?? baseArticle.text;
   const normalized: NormalizedArticle = {
-    ...article,
-    title: normalizeExtractedText(article.title),
+    ...baseArticle,
+    title: normalizeExtractedText(baseArticle.title),
+    text,
+    contentHash: createHash("sha256").update(text).digest("hex"),
+    paragraphCount:
+      publisherContent?.paragraphCount ?? baseArticle.paragraphCount,
+    extractionStrategy:
+      publisherContent?.strategy ?? baseArticle.extractionStrategy,
   };
-  const author = normalizedOptional(article.author);
 
+  if (publisherContent) {
+    normalized.extractionSelector = publisherContent.selector;
+  }
+
+  const author = normalizedOptional(baseArticle.author);
   if (author && !isPublisherAuthor(target.publisher, author)) {
     normalized.author = author;
   } else {
@@ -108,8 +128,18 @@ export function extractNormalizedArticle(
   return normalized;
 }
 
+export function extractNormalizedArticle(
+  target: ArticleTarget,
+  html: string,
+): NormalizedArticle {
+  return normalizeArticleFromBase(target, html, extractBaseArticle(target, html));
+}
+
 function collectQualityWarnings(
-  result: BaseInspectionResult,
+  result: Pick<
+    ArticleInspectionResult,
+    "extractionStrategy" | "paragraphCount"
+  >,
   publisherAsAuthor: boolean,
 ): ArticleQualityWarning[] {
   const warnings: ArticleQualityWarning[] = [];
@@ -133,9 +163,7 @@ export function decideArticleQuality(
   ok: boolean,
   warnings: readonly ArticleQualityWarning[],
 ): ArticleQualityDecision {
-  if (!ok) {
-    return "failed";
-  }
+  if (!ok) return "failed";
 
   if (
     warnings.includes("broad-page-paragraph-fallback") ||
@@ -144,11 +172,43 @@ export function decideArticleQuality(
     return "fallback-required";
   }
 
-  if (warnings.length > 0) {
-    return "review";
+  // A publisher-as-author value is discarded and represented as author_unknown.
+  // It remains a diagnostic warning but does not block content processing.
+  return "ready";
+}
+
+async function fetchWithValidatedRedirects(
+  target: ArticleTarget,
+  fetchImpl: typeof fetch,
+  signal: AbortSignal,
+): Promise<Response> {
+  let currentUrl = validateArticleUrl(target.publisher, target.url).toString();
+
+  for (let redirectCount = 0; redirectCount <= 3; redirectCount += 1) {
+    const response = await fetchImpl(currentUrl, {
+      headers: {
+        accept: "text/html,application/xhtml+xml;q=0.9",
+        "user-agent":
+          "TonyNews-Phase0-Article-Smoke/0.1 (+https://github.com/hungtvb/tony-news)",
+      },
+      redirect: "manual",
+      signal,
+    });
+
+    if (response.status < 300 || response.status >= 400) return response;
+
+    const location = response.headers.get("location");
+    if (!location) {
+      throw new Error(`Redirect ${response.status} did not include Location`);
+    }
+
+    currentUrl = validateArticleUrl(
+      target.publisher,
+      new URL(location, currentUrl).toString(),
+    ).toString();
   }
 
-  return "ready";
+  throw new Error("Article fetch exceeded redirect limit");
 }
 
 export async function fetchAndInspectArticle(
@@ -158,35 +218,86 @@ export async function fetchAndInspectArticle(
     timeoutMs?: number;
   } = {},
 ): Promise<ArticleInspectionResult> {
-  const result = await fetchBaseArticle(target, options);
-  const normalized: ArticleInspectionResult = {
-    ...result,
-    authorStatus: "unknown",
-    qualityDecision: result.ok ? "ready" : "failed",
-  };
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const timeoutMs = options.timeoutMs ?? 15_000;
+  const startedAt = performance.now();
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let httpStatus: number | undefined;
 
-  if (result.title) {
-    normalized.title = normalizeExtractedText(result.title);
+  try {
+    const response = await fetchWithValidatedRedirects(
+      target,
+      fetchImpl,
+      controller.signal,
+    );
+    httpStatus = response.status;
+    const contentType = response.headers.get("content-type");
+    const html = await response.text();
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (contentType && !/html|xhtml/i.test(contentType)) {
+      throw new Error(`Unexpected content type: ${contentType}`);
+    }
+
+    const baseArticle = extractBaseArticle(target, html);
+    const rawAuthor = normalizedOptional(baseArticle.author);
+    const publisherAsAuthor = Boolean(
+      rawAuthor && isPublisherAuthor(target.publisher, rawAuthor),
+    );
+    const article = normalizeArticleFromBase(target, html, baseArticle);
+
+    const result: ArticleInspectionResult = {
+      targetId: target.id,
+      publisher: target.publisher,
+      category: target.category,
+      requestedUrl: target.url,
+      ok: true,
+      durationMs: Math.round(performance.now() - startedAt),
+      httpStatus: response.status,
+      canonicalUrl: article.canonicalUrl,
+      title: article.title,
+      textLength: article.text.length,
+      paragraphCount: article.paragraphCount,
+      extractionStrategy: article.extractionStrategy,
+      contentHash: article.contentHash,
+      authorStatus: article.author ? "reported" : "unknown",
+      qualityDecision: "ready",
+    };
+
+    if (article.author) result.author = article.author;
+    if (article.publishedAt) result.publishedAt = article.publishedAt;
+    if (article.updatedAt) result.updatedAt = article.updatedAt;
+    if (article.extractionSelector) {
+      result.extractionSelector = article.extractionSelector;
+    }
+
+    const warnings = collectQualityWarnings(result, publisherAsAuthor);
+    if (warnings.length > 0) result.qualityWarnings = warnings;
+    result.qualityDecision = decideArticleQuality(true, warnings);
+
+    return result;
+  } catch (error: unknown) {
+    const result: ArticleInspectionResult = {
+      targetId: target.id,
+      publisher: target.publisher,
+      category: target.category,
+      requestedUrl: target.url,
+      ok: false,
+      durationMs: Math.round(performance.now() - startedAt),
+      authorStatus: "unknown",
+      qualityDecision: "failed",
+      error:
+        error instanceof Error && error.name === "AbortError"
+          ? `Timed out after ${timeoutMs}ms`
+          : error instanceof Error
+            ? error.message
+            : String(error),
+    };
+
+    if (httpStatus !== undefined) result.httpStatus = httpStatus;
+    return result;
+  } finally {
+    clearTimeout(timeout);
   }
-
-  const author = normalizedOptional(result.author);
-  const publisherAsAuthor = Boolean(
-    author && isPublisherAuthor(result.publisher, author),
-  );
-
-  if (author && !publisherAsAuthor) {
-    normalized.author = author;
-    normalized.authorStatus = "reported";
-  } else {
-    delete normalized.author;
-    normalized.authorStatus = "unknown";
-  }
-
-  const warnings = collectQualityWarnings(normalized, publisherAsAuthor);
-  if (warnings.length > 0) {
-    normalized.qualityWarnings = warnings;
-  }
-  normalized.qualityDecision = decideArticleQuality(result.ok, warnings);
-
-  return normalized;
 }
