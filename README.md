@@ -50,6 +50,18 @@ pnpm rss:smoke -- --json
 
 The smoke check performs network requests to publisher RSS endpoints. It does not fetch full article content and does not bypass access controls.
 
+## Article extraction smoke test
+
+The direct-fetch smoke test checks one public article per publisher and emits metrics only:
+
+```bash
+pnpm article:smoke
+pnpm article:smoke -- --target vne-google-earth-ai
+pnpm article:smoke -- --json
+```
+
+The JSON output contains metadata, extraction strategy, text length, paragraph count, and content hash. It intentionally excludes full article text.
+
 ## Verification
 
 ```bash
