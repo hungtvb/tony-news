@@ -14,6 +14,7 @@ import { migrate } from "drizzle-orm/node-postgres/migrator";
 import {
   createPoolArticleRepository,
   persistArticleSnapshotWithRetry,
+  postgresErrorCode,
   type ArticleRepositoryHandle,
 } from "./node-postgres.ts";
 import type { ArticleSnapshot } from "./persistence.ts";
@@ -254,12 +255,7 @@ if (!databaseUrl) {
           }),
         ),
         (error: unknown) => {
-          assert.equal(
-            typeof error === "object" && error !== null && "code" in error
-              ? (error as { code?: string }).code
-              : undefined,
-            "23503",
-          );
+          assert.equal(postgresErrorCode(error), "23503");
           return true;
         },
       );
