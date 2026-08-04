@@ -7,6 +7,7 @@ import {
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -130,10 +131,6 @@ export const articles = pgTable(
   "articles",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    sourceId: text("source_id")
-      .notNull()
-      .references(() => sources.id, { onDelete: "restrict" }),
-    sourceArticleId: text("source_article_id"),
     canonicalUrl: text("canonical_url").notNull(),
     title: text("title").notNull(),
     author: text("author"),
@@ -151,19 +148,42 @@ export const articles = pgTable(
   },
   (table) => [
     uniqueIndex("articles_canonical_url_uq").on(table.canonicalUrl),
-    uniqueIndex("articles_source_article_id_uq")
-      .on(table.sourceId, table.sourceArticleId)
-      .where(sql`${table.sourceArticleId} is not null`),
-    index("articles_source_published_idx").on(
-      table.sourceId,
-      table.publishedAt,
-    ),
+    index("articles_published_idx").on(table.publishedAt),
     index("articles_last_seen_idx").on(table.lastSeenAt),
     check(
       "articles_current_version_positive_chk",
       sql`${table.currentVersionNumber} > 0`,
     ),
     check("articles_canonical_url_https_chk", sql`${table.canonicalUrl} like 'https://%'`),
+  ],
+);
+
+export const articleSources = pgTable(
+  "article_sources",
+  {
+    articleId: uuid("article_id")
+      .notNull()
+      .references(() => articles.id, { onDelete: "cascade" }),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => sources.id, { onDelete: "restrict" }),
+    sourceArticleId: text("source_article_id"),
+    firstSeenAt: timestampWithTimezone("first_seen_at").defaultNow().notNull(),
+    lastSeenAt: timestampWithTimezone("last_seen_at").defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "article_sources_article_source_pk",
+      columns: [table.articleId, table.sourceId],
+    }),
+    uniqueIndex("article_sources_source_article_id_uq")
+      .on(table.sourceId, table.sourceArticleId)
+      .where(sql`${table.sourceArticleId} is not null`),
+    index("article_sources_source_last_seen_idx").on(
+      table.sourceId,
+      table.lastSeenAt,
+    ),
+    index("article_sources_article_idx").on(table.articleId),
   ],
 );
 
@@ -276,6 +296,8 @@ export type SourceRow = typeof sources.$inferSelect;
 export type NewSourceRow = typeof sources.$inferInsert;
 export type ArticleRow = typeof articles.$inferSelect;
 export type NewArticleRow = typeof articles.$inferInsert;
+export type ArticleSourceRow = typeof articleSources.$inferSelect;
+export type NewArticleSourceRow = typeof articleSources.$inferInsert;
 export type ArticleVersionRow = typeof articleVersions.$inferSelect;
 export type NewArticleVersionRow = typeof articleVersions.$inferInsert;
 export type IngestionRunRow = typeof ingestionRuns.$inferSelect;
