@@ -19,7 +19,6 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
   readonly articleIdBySourceIdentity = new Map<string, string>();
   readonly versions: NewArticleVersion[] = [];
   transactionCount = 0;
-  touched: Array<{ articleId: string; observedAt: Date }> = [];
   #nextId = 1;
 
   async transaction<T>(
@@ -41,12 +40,6 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
         this.versions.push(input);
       },
       updateArticleHead: async (input) => this.update(input),
-      touchArticle: async (articleId, observedAt) => {
-        const article = this.articles.get(articleId);
-        if (!article) throw new Error("article not found");
-        article.lastSeenAt = observedAt;
-        this.touched.push({ articleId, observedAt });
-      },
     };
 
     return operation(transaction);
@@ -103,6 +96,36 @@ class InMemoryArticleRepository implements ArticlePersistenceRepository {
     const article = this.articles.get(input.articleId);
     if (!article) throw new Error("article not found");
 
+    const conflictingArticleId = this.articleIdByCanonicalUrl.get(
+      input.canonicalUrl,
+    );
+    if (conflictingArticleId && conflictingArticleId !== input.articleId) {
+      throw new Error("duplicate canonical URL");
+    }
+
+    if (article.canonicalUrl !== input.canonicalUrl) {
+      this.articleIdByCanonicalUrl.delete(article.canonicalUrl);
+      this.articleIdByCanonicalUrl.set(input.canonicalUrl, input.articleId);
+    }
+
+    const oldSourceIdentity = this.sourceIdentity(article);
+    const newSourceIdentity = this.sourceIdentity(input);
+    if (oldSourceIdentity !== newSourceIdentity) {
+      if (oldSourceIdentity) this.articleIdBySourceIdentity.delete(oldSourceIdentity);
+      if (newSourceIdentity) {
+        const conflictingSourceArticle =
+          this.articleIdBySourceIdentity.get(newSourceIdentity);
+        if (conflictingSourceArticle && conflictingSourceArticle !== input.articleId) {
+          throw new Error("duplicate source identity");
+        }
+        this.articleIdBySourceIdentity.set(newSourceIdentity, input.articleId);
+      }
+    }
+
+    article.sourceId = input.sourceId;
+    article.canonicalUrl = input.canonicalUrl;
+    if (input.sourceArticleId) article.sourceArticleId = input.sourceArticleId;
+    else delete article.sourceArticleId;
     article.title = input.title;
     article.authorStatus = input.authorStatus;
     article.currentContentHash = input.currentContentHash;
@@ -156,22 +179,28 @@ test("creates an article and immutable version in one transaction", async () => 
   assert.equal(repository.versions[0]?.contentHash, "hash-v1");
 });
 
-test("does not append a version when the content hash is unchanged", async () => {
+test("refreshes article metadata without appending an unchanged version", async () => {
   const repository = new InMemoryArticleRepository();
   await persistArticleSnapshot(repository, snapshot());
 
   const observedAt = new Date("2026-08-04T02:00:00Z");
   const result = await persistArticleSnapshot(
     repository,
-    snapshot({ observedAt }),
+    snapshot({
+      title: "Google tạm dừng AI tạo ảnh - cập nhật metadata",
+      observedAt,
+    }),
   );
 
   assert.equal(result.outcome, "unchanged");
   assert.equal(result.versionNumber, 1);
   assert.equal(repository.articles.size, 1);
   assert.equal(repository.versions.length, 1);
-  assert.equal(repository.touched.length, 1);
-  assert.equal(repository.touched[0]?.observedAt, observedAt);
+  assert.equal(repository.articles.get("article-1")?.lastSeenAt, observedAt);
+  assert.equal(
+    repository.articles.get("article-1")?.title,
+    "Google tạm dừng AI tạo ảnh - cập nhật metadata",
+  );
 });
 
 test("appends an immutable version and advances the article head", async () => {
@@ -209,14 +238,15 @@ test("appends an immutable version and advances the article head", async () => {
   );
 });
 
-test("resolves the same article by source identity even when URL changes", async () => {
+test("resolves by source identity and refreshes a changed canonical URL", async () => {
   const repository = new InMemoryArticleRepository();
   await persistArticleSnapshot(repository, snapshot());
 
+  const updatedUrl = "https://tuoitre.vn/example-updated.htm";
   const result = await persistArticleSnapshot(
     repository,
     snapshot({
-      canonicalUrl: "https://tuoitre.vn/example-updated.htm",
+      canonicalUrl: updatedUrl,
       observedAt: new Date("2026-08-04T04:00:00Z"),
     }),
   );
@@ -224,6 +254,12 @@ test("resolves the same article by source identity even when URL changes", async
   assert.equal(result.outcome, "unchanged");
   assert.equal(repository.articles.size, 1);
   assert.equal(repository.versions.length, 1);
+  assert.equal(repository.articles.get("article-1")?.canonicalUrl, updatedUrl);
+  assert.equal(repository.articleIdByCanonicalUrl.get(updatedUrl), "article-1");
+  assert.equal(
+    repository.articleIdByCanonicalUrl.has("https://tuoitre.vn/example.htm"),
+    false,
+  );
 });
 
 test("rejects content that has not passed extraction quality gates", async () => {
