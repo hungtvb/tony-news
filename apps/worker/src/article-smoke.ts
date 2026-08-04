@@ -4,7 +4,7 @@ import {
   fetchAndInspectArticle,
   type ArticleInspectionResult,
   type ArticleTarget,
-} from "../../../packages/ingestion/src/article.ts";
+} from "../../../packages/ingestion/src/article-normalized.ts";
 
 const PHASE_0_ARTICLE_TARGETS = [
   {
@@ -101,6 +101,7 @@ function printHuman(results: readonly ArticleInspectionResult[]): void {
       strategy: result.extractionStrategy ?? "-",
       textLength: result.textLength ?? "-",
       paragraphs: result.paragraphCount ?? "-",
+      warnings: result.qualityWarnings?.join(", ") ?? "",
       durationMs: result.durationMs,
       error: result.error ?? "",
     })),
