@@ -18,10 +18,9 @@ const target: ArticleTarget = {
 const config = {
   accountId: "account-123",
   apiToken: "secret-token",
-  apiBaseUrl: "https://api.cloudflare.test/client/v4",
 };
 
-test("calls the markdown endpoint with a validated article URL", async () => {
+test("calls the pinned Cloudflare markdown endpoint with a validated article URL", async () => {
   let requestedUrl = "";
   let authorization = "";
   let body = "";
@@ -41,7 +40,7 @@ test("calls the markdown endpoint with a validated article URL", async () => {
 
   assert.equal(
     requestedUrl,
-    "https://api.cloudflare.test/client/v4/accounts/account-123/browser-rendering/markdown",
+    "https://api.cloudflare.com/client/v4/accounts/account-123/browser-rendering/markdown",
   );
   assert.equal(authorization, "Bearer secret-token");
   assert.deepEqual(JSON.parse(body), { url: "https://tuoitre.vn/example.htm" });
