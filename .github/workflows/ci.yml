@@ -35,8 +35,16 @@ jobs:
         run: pnpm test
 
       - name: Live RSS smoke
+        id: live-rss-smoke
         continue-on-error: true
-        run: pnpm rss:smoke -- --json | tee rss-smoke.json
+        shell: bash
+        run: |
+          set +e
+          pnpm run rss:smoke -- --json > rss-smoke.json 2>&1
+          status=$?
+          cat rss-smoke.json
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
 
       - name: Upload RSS smoke evidence
         if: always()
