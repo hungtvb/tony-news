@@ -1,0 +1,13 @@
+{
+  "name": "@tony-news/db",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./persistence": "./src/persistence.ts",
+    "./schema": "./src/schema.ts",
+    "./state-machine": "./src/state-machine.ts"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.2"
+  }
+}
