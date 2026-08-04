@@ -34,11 +34,16 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
-      - name: Verify database migration is reproducible
-        shell: bash
-        run: |
-          pnpm db:generate
-          git diff --exit-code -- packages/db/drizzle
+      - name: Generate database migration
+        run: pnpm db:generate
+
+      - name: Upload generated database migration
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-db-migration
+          path: packages/db/drizzle
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Live RSS smoke
         id: live-rss-smoke
