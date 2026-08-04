@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./acquisition-policy": "./src/acquisition-policy.ts",
     "./article": "./src/article-normalized.ts",
     "./browser-run": "./src/browser-run.ts",
     "./rss": "./src/rss.ts",
