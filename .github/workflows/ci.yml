@@ -49,6 +49,9 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Validate benchmark contract
+        run: pnpm benchmark:validate -- --json
+
       - name: Verify database migration is reproducible
         shell: bash
         run: |

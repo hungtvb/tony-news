@@ -8,6 +8,7 @@
     "test": "node --experimental-strip-types --test packages/**/*.test.ts",
     "test:integration": "node --experimental-strip-types --test packages/**/*.integration.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "benchmark:validate": "node --experimental-strip-types apps/worker/src/benchmark-validate.ts",
     "rss:smoke": "node --experimental-strip-types apps/worker/src/rss-smoke.ts",
     "article:smoke": "node --experimental-strip-types apps/worker/src/article-smoke.ts",
     "article:structure": "node --experimental-strip-types apps/worker/src/article-structure-smoke.ts",
