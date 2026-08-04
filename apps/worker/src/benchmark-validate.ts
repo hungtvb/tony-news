@@ -5,6 +5,11 @@ import {
   buildBenchmarkInventory,
   loadBenchmarkManifest,
 } from "../../../packages/benchmarks/src/manifest.ts";
+import {
+  PHASE_0_BENCHMARK_COVERAGE,
+  validateBenchmarkCaseSemantics,
+  validateBenchmarkCoverage,
+} from "../../../packages/benchmarks/src/policy.ts";
 
 interface CliOptions {
   json: boolean;
@@ -46,12 +51,21 @@ function parseArgs(args: string[]): CliOptions {
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
   const manifest = await loadBenchmarkManifest(options.manifestPath);
+  const policyIssues = [
+    ...validateBenchmarkCaseSemantics(manifest),
+    ...validateBenchmarkCoverage(manifest),
+  ];
+  if (policyIssues.length > 0) {
+    throw new Error(`Benchmark policy failed:\n- ${policyIssues.join("\n- ")}`);
+  }
+
   const inventory = buildBenchmarkInventory(manifest);
   const result = {
     checkedAt: new Date().toISOString(),
     manifestPath: options.manifestPath,
     schemaVersion: manifest.schemaVersion,
     datasetVersion: manifest.datasetVersion,
+    coveragePolicy: PHASE_0_BENCHMARK_COVERAGE,
     inventory,
   };
 
