@@ -3,7 +3,7 @@
 - Status: Approved
 - Decision date: 2026-08-04
 - Scope: Reader experience for desktop, tablet, and mobile
-- Prototype: `apps/web/prototypes/tony-news-reader-demo.html`
+- Design evidence: standalone Editorial Mode prototype approved in the Tony News project conversation on 2026-08-04; the prototype artifact is not yet versioned in this repository
 
 ## Decision
 
@@ -166,5 +166,7 @@ A production reader implementation can claim conformance with this baseline only
 ## Current evidence and limitations
 
 The standalone prototype has been reviewed and approved as the design baseline. It demonstrates responsive layout and key interactions with mock content.
+
+The prototype artifact itself is currently retained outside the repository. The repository records the approved design contract, not a runnable copy of that prototype.
 
 It is not yet evidence that the production Next.js reader, real API integration, loading states, failure states, article detail flow, or live source data conform to the design. Those items must be verified during implementation.
