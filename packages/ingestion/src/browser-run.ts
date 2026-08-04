@@ -111,11 +111,13 @@ export async function fetchBrowserMarkdown(
   );
   const timeoutMs = config.timeoutMs ?? 30_000;
   const fetchImpl = options.fetchImpl ?? fetch;
+
+  // Reject over-budget calls before creating timers or network resources.
+  options.budget?.consume();
+
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
   const startedAt = performance.now();
-
-  options.budget?.consume();
 
   try {
     const response = await fetchImpl(
