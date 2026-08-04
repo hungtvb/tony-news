@@ -1,0 +1,570 @@
+{
+  "schemaVersion": "2.0.0",
+  "datasetVersion": "phase0-contract-v2",
+  "generatedAt": "2026-08-04T06:50:00Z",
+  "legalBoundary": "Metadata-only internal benchmark. Do not store or republish full publisher article text.",
+  "articles": [
+    {
+      "id": "TN-B001",
+      "category": "technology",
+      "sourceId": "vne-tech",
+      "title": "AI của Google Earth vừa ra đã bị rút vì tràn ngập deepfake",
+      "canonicalUrl": "https://vnexpress.net/ai-cua-google-earth-vua-ra-da-bi-rut-vi-tran-ngap-deepfake-5104049.html",
+      "observedDate": "2026-08-01",
+      "verification": "extraction-ready",
+      "contentType": "news-report",
+      "entities": ["Google Earth", "AI", "deepfake"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B002",
+      "category": "technology",
+      "sourceId": "tto-tech",
+      "title": "Google tạm dừng AI tạo ảnh trên Google Earth vì lo ảnh vệ tinh giả",
+      "canonicalUrl": "https://tuoitre.vn/google-tam-dung-ai-tao-anh-tren-google-earth-vi-lo-anh-ve-tinh-gia-100260801212001232.htm",
+      "observedDate": "2026-08-01",
+      "verification": "extraction-ready",
+      "contentType": "news-report",
+      "entities": ["Google Earth", "AI", "ảnh vệ tinh giả"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B003",
+      "category": "technology",
+      "sourceId": "vne-tech",
+      "title": "iPhone 18 Pro có thể tăng giá 300 USD",
+      "canonicalUrl": "https://vnexpress.net/iphone-18-pro-co-the-tang-gia-300-usd-5103950.html",
+      "observedDate": "2026-08-01",
+      "verification": "page-fetched",
+      "contentType": "rumor-report",
+      "entities": ["Apple", "iPhone 18 Pro", "300 USD"],
+      "uncertainty": "rumor"
+    },
+    {
+      "id": "TN-B004",
+      "category": "technology",
+      "sourceId": "vne-tech",
+      "title": "Số lỗi Chrome phát hiện trong một tháng nhiều hơn hai năm cộng lại nhờ AI",
+      "canonicalUrl": "https://vnexpress.net/so-loi-chrome-phat-hien-trong-mot-thang-nhieu-hon-hai-nam-cong-lai-nho-ai-5103949.html",
+      "observedDate": "2026-08-01",
+      "verification": "page-fetched",
+      "contentType": "numeric-report",
+      "entities": ["Google Chrome", "AI", "lỗ hổng bảo mật"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B005",
+      "category": "technology",
+      "sourceId": "vne-tech",
+      "title": "OpenAI vượt mốc một tỷ người dùng",
+      "canonicalUrl": "https://vnexpress.net/openai-vuot-moc-mot-ty-nguoi-dung-5104202.html",
+      "observedDate": "2026-08-03",
+      "verification": "url-observed",
+      "contentType": "numeric-report",
+      "entities": ["OpenAI", "một tỷ người dùng"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B006",
+      "category": "technology",
+      "sourceId": "tto-tech",
+      "title": "Úc ra 'tối hậu thư' với Google, Meta: Trả tiền cho báo chí hoặc nộp phí",
+      "canonicalUrl": "https://tuoitre.vn/uc-ra-toi-hau-thu-voi-google-meta-tra-tien-cho-bao-chi-hoac-nop-phi-10026080310581534.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "policy-report",
+      "entities": ["Úc", "Google", "Meta", "báo chí"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B007",
+      "category": "technology",
+      "sourceId": "tto-tech",
+      "title": "EU siết AI: Deepfake và nội dung do AI tạo ra phải gắn nhãn",
+      "canonicalUrl": "https://tuoitre.vn/eu-siet-ai-deepfake-va-noi-dung-do-ai-tao-ra-phai-gan-nhan-100260803093900628.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "policy-report",
+      "entities": ["Liên minh châu Âu", "AI", "deepfake"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B008",
+      "category": "technology",
+      "sourceId": "tto-tech",
+      "title": "Gemini Robotics 2: AI giúp robot 'nghĩ', đi, cúi, nhặt đồ như con người",
+      "canonicalUrl": "https://tuoitre.vn/gemini-robotics-2-ai-giup-robot-nghi-di-cui-nhat-do-nhu-con-nguoi-100260803131937769.htm",
+      "observedDate": "2026-08-03",
+      "verification": "url-observed",
+      "contentType": "product-announcement",
+      "entities": ["Google", "Gemini Robotics 2", "robot"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B009",
+      "category": "technology",
+      "sourceId": "tn-tech",
+      "title": "Galaxy S27 Ultra có bước ngoặt lớn về dung lượng pin sau 7 năm",
+      "canonicalUrl": "https://thanhnien.vn/galaxy-s27-ultra-co-buoc-ngoat-lon-ve-dung-luong-pin-sau-7-nam-185260803085046704.htm",
+      "observedDate": "2026-08-03",
+      "verification": "extraction-ready",
+      "contentType": "rumor-report",
+      "entities": ["Samsung", "Galaxy S27 Ultra", "pin"],
+      "uncertainty": "rumor"
+    },
+    {
+      "id": "TN-B010",
+      "category": "technology",
+      "sourceId": "tn-tech",
+      "title": "Danh tính công ty bí ẩn đứng sau tham vọng chế tạo máy EUV của Trung Quốc",
+      "canonicalUrl": "https://thanhnien.vn/danh-tinh-cong-ty-bi-an-dung-sau-tham-vong-che-tao-may-euv-cua-trung-quoc-185260731234851874.htm",
+      "observedDate": "2026-07-31",
+      "verification": "page-fetched",
+      "contentType": "analysis-report",
+      "entities": ["Trung Quốc", "máy EUV", "bán dẫn"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B011",
+      "category": "entertainment",
+      "sourceId": "vne-ent",
+      "title": "'Spider-Man' đối đầu 'The Odyssey'",
+      "canonicalUrl": "https://vnexpress.net/spider-man-doi-dau-the-odyssey-5104434.html",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "box-office-report",
+      "entities": ["Spider-Man", "The Odyssey", "phòng vé"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B012",
+      "category": "entertainment",
+      "sourceId": "tn-ent",
+      "title": "'Người Nhện' càn quét phòng vé, mở màn với hơn 90 tỉ đồng tại Việt Nam",
+      "canonicalUrl": "https://thanhnien.vn/nguoi-nhen-can-quet-phong-ve-mo-man-voi-hon-90-ti-dong-tai-viet-nam-185260803110843593.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "box-office-report",
+      "entities": ["Spider-Man", "Việt Nam", "90 tỉ đồng"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B013",
+      "category": "entertainment",
+      "sourceId": "vne-ent",
+      "title": "Đạo diễn Ấn Độ làm phim về sử thi 'Ramayana'",
+      "canonicalUrl": "https://vnexpress.net/dao-dien-an-do-lam-phim-ve-su-thi-ramayana-5104372.html",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "production-announcement",
+      "entities": ["Ấn Độ", "Ramayana", "điện ảnh"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B014",
+      "category": "entertainment",
+      "sourceId": "vne-ent",
+      "title": "NXB Hội Nhà văn dừng phát hành ba cuốn sách về thời nhà Trần",
+      "canonicalUrl": "https://vnexpress.net/nxb-hoi-nha-van-dung-phat-hanh-ba-cuon-sach-ve-thoi-nha-tran-5104635.html",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "developing-story",
+      "entities": ["NXB Hội Nhà văn", "nhà Trần", "sách"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B015",
+      "category": "entertainment",
+      "sourceId": "vne-ent",
+      "title": "Fan lo lắng cho ngoại hình của Ariana Grande",
+      "canonicalUrl": "https://vnexpress.net/fan-lo-lang-cho-ngoai-hinh-cua-ariana-grande-5104406.html",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "sensitive-report",
+      "entities": ["Ariana Grande", "ngoại hình", "người hâm mộ"],
+      "uncertainty": "sensitive"
+    },
+    {
+      "id": "TN-B016",
+      "category": "entertainment",
+      "sourceId": "tto-ent",
+      "title": "Ai sẽ nối dài thành tích của nhan sắc Việt tại Miss & Mister Celebrity International?",
+      "canonicalUrl": "https://tuoitre.vn/ai-se-noi-dai-thanh-tich-cua-nhan-sac-viet-tai-miss-mister-celebrity-international-100260803163351411.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "event-preview",
+      "entities": ["Việt Nam", "Miss & Mister Celebrity International"],
+      "uncertainty": "estimate"
+    },
+    {
+      "id": "TN-B017",
+      "category": "entertainment",
+      "sourceId": "tto-ent",
+      "title": "'Xài chùa' hàng ngàn bài hát karaoke: Nhạc sĩ Đông Thiên Đức lên tiếng",
+      "canonicalUrl": "https://tuoitre.vn/xai-chua-hang-ngan-bai-hat-karaoke-nhac-si-dong-thien-duc-len-tieng-100260803153012099.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "reaction-report",
+      "entities": ["Đông Thiên Đức", "karaoke", "bản quyền âm nhạc"],
+      "uncertainty": "allegation"
+    },
+    {
+      "id": "TN-B018",
+      "category": "entertainment",
+      "sourceId": "tto-ent",
+      "title": "Giải mã cơn sốt Chiikawa: Từ vô danh đến biểu tượng sánh ngang Doraemon, Hello Kitty",
+      "canonicalUrl": "https://tuoitre.vn/giai-ma-con-sot-chiikawa-tu-vo-danh-den-bieu-tuong-sanh-ngang-doraemon-hello-kitty-100260803143444271.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "analysis-report",
+      "entities": ["Chiikawa", "Doraemon", "Hello Kitty"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B019",
+      "category": "entertainment",
+      "sourceId": "tn-ent",
+      "title": "Thu Minh - Hương Tràm hóa giải mâu thuẫn sau 13 năm",
+      "canonicalUrl": "https://thanhnien.vn/thu-minh-huong-tram-hoa-giai-mau-thuan-sau-13-nam-185260802022338304.htm",
+      "observedDate": "2026-08-02",
+      "verification": "page-fetched",
+      "contentType": "developing-story",
+      "entities": ["Thu Minh", "Hương Tràm", "mâu thuẫn"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B020",
+      "category": "entertainment",
+      "sourceId": "tn-ent",
+      "title": "Netflix bị kiện, đòi bồi thường hơn 100 triệu USD",
+      "canonicalUrl": "https://thanhnien.vn/netflix-bi-kien-doi-boi-thuong-hon-100-trieu-usd-185260801114416407.htm",
+      "observedDate": "2026-08-01",
+      "verification": "page-fetched",
+      "contentType": "legal-allegation",
+      "entities": ["Netflix", "vụ kiện", "100 triệu USD"],
+      "uncertainty": "allegation"
+    },
+    {
+      "id": "TN-B021",
+      "category": "sports",
+      "sourceId": "vne-sport",
+      "title": "Việt Nam khiến Indonesia chịu thống kê chưa từng có ở ASEAN Cup",
+      "canonicalUrl": "https://vnexpress.net/viet-nam-khien-indonesia-chiu-thong-ke-chua-tung-co-o-asean-cup-5104852.html",
+      "observedDate": "2026-08-04",
+      "verification": "page-fetched",
+      "contentType": "match-result",
+      "entities": ["Việt Nam", "Indonesia", "ASEAN Cup"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B022",
+      "category": "sports",
+      "sourceId": "tto-sport",
+      "title": "Đánh bại Indonesia, Việt Nam đi tiếp trong trường hợp nào ở ASEAN Cup 2026?",
+      "canonicalUrl": "https://tuoitre.vn/danh-bai-indonesia-viet-nam-di-tiep-trong-truong-hop-nao-o-asean-cup-2026-100260803223712347.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "match-analysis",
+      "entities": ["Việt Nam", "Indonesia", "ASEAN Cup 2026"],
+      "uncertainty": "estimate"
+    },
+    {
+      "id": "TN-B023",
+      "category": "sports",
+      "sourceId": "tn-sport",
+      "title": "Đội tuyển Việt Nam thăng hoa rực rỡ, thắng ‘hủy diệt’ chủ nhà Indonesia 3-0: Đấu Campuchia ngày nào?",
+      "canonicalUrl": "https://thanhnien.vn/doi-tuyen-viet-nam-thang-hoa-ruc-ro-thang-huy-diet-chu-nha-indonesia-3-0-dau-campuchia-ngay-nao-185260803215929642.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "match-result",
+      "entities": ["Việt Nam", "Indonesia", "Campuchia", "3-0"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B024",
+      "category": "sports",
+      "sourceId": "vne-sport",
+      "title": "Quang Hải cân bằng kỷ lục thi đấu ở đội tuyển Việt Nam",
+      "canonicalUrl": "https://vnexpress.net/quang-hai-can-bang-ky-luc-thi-dau-o-doi-tuyen-viet-nam-5104791.html",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "player-milestone",
+      "entities": ["Quang Hải", "đội tuyển Việt Nam", "kỷ lục"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B025",
+      "category": "sports",
+      "sourceId": "tto-sport",
+      "title": "HLV Indonesia xin lỗi người hâm mộ và khen ngợi tuyển Việt Nam",
+      "canonicalUrl": "https://tuoitre.vn/hlv-indonesia-xin-loi-nguoi-ham-mo-sau-tran-thua-viet-nam-100260803215845756.htm",
+      "observedDate": "2026-08-03",
+      "verification": "url-observed",
+      "contentType": "post-match-reaction",
+      "entities": ["HLV Indonesia", "Việt Nam", "Indonesia"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B026",
+      "category": "sports",
+      "sourceId": "vne-sport",
+      "title": "Nghi vấn gian lận với áo ngực tại Tour de France nữ",
+      "canonicalUrl": "https://vnexpress.net/nghi-van-gian-lan-voi-ao-nguc-tai-tour-de-france-nu-5104804.html",
+      "observedDate": "2026-08-04",
+      "verification": "url-observed",
+      "contentType": "allegation-report",
+      "entities": ["Tour de France nữ", "gian lận"],
+      "uncertainty": "allegation"
+    },
+    {
+      "id": "TN-B027",
+      "category": "sports",
+      "sourceId": "vne-sport",
+      "title": "Sancho tập nhờ sân đội hạng 10 Anh",
+      "canonicalUrl": "https://vnexpress.net/sancho-tap-nho-san-doi-hang-10-anh-5104802.html",
+      "observedDate": "2026-08-04",
+      "verification": "url-observed",
+      "contentType": "player-update",
+      "entities": ["Jadon Sancho", "Anh", "tập luyện"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B028",
+      "category": "sports",
+      "sourceId": "tto-sport",
+      "title": "CLB TP.HCM I loại bỏ đối thủ khỏi cuộc đua vô địch",
+      "canonicalUrl": "https://tuoitre.vn/clb-tphcm-i-loai-bo-doi-thu-khoi-cuoc-dua-vo-dich-100260803215345492.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "match-result",
+      "entities": ["CLB TP.HCM I", "Hà Nội", "giải nữ VĐQG"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B029",
+      "category": "sports",
+      "sourceId": "tn-sport",
+      "title": "CLB TP.HCM I thắng Hà Nội trận ‘siêu kinh điển’, vì sao giải nữ VĐQG tạm nghỉ?",
+      "canonicalUrl": "https://thanhnien.vn/clb-tphcm-i-thang-ha-noi-tran-sieu-kinh-dien-vi-sao-giai-nu-vdqg-tam-nghi-185260803205948177.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "match-result",
+      "entities": ["CLB TP.HCM I", "Hà Nội", "giải nữ VĐQG"],
+      "uncertainty": "none"
+    },
+    {
+      "id": "TN-B030",
+      "category": "sports",
+      "sourceId": "tn-sport",
+      "title": "Billiards: Ngược dòng nghẹt thở, Nguyễn Trần Thanh Tạo vô địch PBA, nhận thưởng tiền tỉ",
+      "canonicalUrl": "https://thanhnien.vn/billiards-nguoc-dong-nghet-tho-nguyen-tran-thanh-tao-vo-dich-pba-nhan-thuong-tien-ti-185260803220806376.htm",
+      "observedDate": "2026-08-03",
+      "verification": "page-fetched",
+      "contentType": "competition-result",
+      "entities": ["Nguyễn Trần Thanh Tạo", "PBA", "tiền thưởng"],
+      "uncertainty": "none"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TN-C001",
+      "kind": "same-event",
+      "articleIds": ["TN-B001", "TN-B002"],
+      "expectedRelation": "same-event",
+      "expectedClusterId": "tech-google-earth-ai",
+      "evaluationFocus": "Cross-source reports describe Google's suspension of generative imagery in Google Earth over fake satellite-image risk.",
+      "knownUncertainty": "Label is inferred from titles and prior extraction smoke; full human event review is pending.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Retained from benchmark seed v1; not accepted ground truth."
+      }
+    },
+    {
+      "id": "TN-C002",
+      "kind": "same-event",
+      "articleIds": ["TN-B011", "TN-B012"],
+      "expectedRelation": "same-event",
+      "expectedClusterId": "ent-spiderman-boxoffice",
+      "evaluationFocus": "Cross-source Spider-Man opening and box-office coverage should be a candidate positive pair.",
+      "knownUncertainty": "The VnExpress headline also mentions The Odyssey; exact event scope requires human review.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Retained from benchmark seed v1; not accepted ground truth."
+      }
+    },
+    {
+      "id": "TN-C003",
+      "kind": "same-event",
+      "articleIds": ["TN-B021", "TN-B022", "TN-B023"],
+      "expectedRelation": "same-event",
+      "expectedClusterId": "sport-vietnam-indonesia-2026-08-03",
+      "evaluationFocus": "Three publishers cover the same Vietnam versus Indonesia ASEAN Cup match and immediate qualification context.",
+      "knownUncertainty": "One article emphasizes qualification scenarios rather than only the result; cluster scope must remain event-centric.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Strong multi-source candidate from seed v1; human review pending."
+      }
+    },
+    {
+      "id": "TN-C004",
+      "kind": "same-event",
+      "articleIds": ["TN-B028", "TN-B029"],
+      "expectedRelation": "same-event",
+      "expectedClusterId": "sport-womens-tphcm-hanoi-2026-08-03",
+      "evaluationFocus": "Two publishers report the same TP.HCM I versus Hà Nội women's league match.",
+      "knownUncertainty": "The Thanh Niên article additionally discusses the league break.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Retained from benchmark seed v1; human review pending."
+      }
+    },
+    {
+      "id": "TN-C005",
+      "kind": "related-subevent",
+      "articleIds": ["TN-B021", "TN-B024"],
+      "expectedRelation": "related-not-merge",
+      "evaluationFocus": "The match result and Quang Hải's appearance milestone share team context but represent different story focuses.",
+      "knownUncertainty": "A product decision may later allow parent-event grouping while keeping distinct story nodes.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Boundary case added to prevent over-broad same-match merging."
+      }
+    },
+    {
+      "id": "TN-C006",
+      "kind": "related-subevent",
+      "articleIds": ["TN-B021", "TN-B025"],
+      "expectedRelation": "related-not-merge",
+      "evaluationFocus": "The match result and the Indonesia coach's post-match apology are related but should remain distinct story focuses.",
+      "knownUncertainty": "Parent-event grouping may link them without merging summaries.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Reaction-versus-result boundary case."
+      }
+    },
+    {
+      "id": "TN-C007",
+      "kind": "hard-negative",
+      "articleIds": ["TN-B003", "TN-B009"],
+      "expectedRelation": "different-event",
+      "evaluationFocus": "Two future-phone rumor articles must not merge merely because both concern flagship-device speculation.",
+      "knownUncertainty": "They do not share a manufacturer or product entity; this is a broad semantic-overlap kill test.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Adversarial category-level similarity case."
+      }
+    },
+    {
+      "id": "TN-C008",
+      "kind": "hard-negative",
+      "articleIds": ["TN-B021", "TN-B028"],
+      "expectedRelation": "different-event",
+      "evaluationFocus": "Two Vietnamese football match reports on the same date must not merge across competitions and teams.",
+      "knownUncertainty": "Shared sport, country, date, and match-result vocabulary can mislead shallow similarity models.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Date/category lexical-overlap kill test."
+      }
+    },
+    {
+      "id": "TN-C009",
+      "kind": "hard-negative",
+      "articleIds": ["TN-B006", "TN-B007"],
+      "expectedRelation": "different-event",
+      "evaluationFocus": "Technology policy stories about platform regulation and AI labeling are distinct events despite policy vocabulary.",
+      "knownUncertainty": "Both involve regulation and large technology companies but different jurisdictions and rules.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Policy-topic similarity kill test."
+      }
+    },
+    {
+      "id": "TN-C010",
+      "kind": "hard-negative",
+      "articleIds": ["TN-B015", "TN-B019"],
+      "expectedRelation": "different-event",
+      "evaluationFocus": "Celebrity coverage must not merge unrelated personal stories simply because both concern female singers.",
+      "knownUncertainty": "No direct entity overlap; retained as an over-generalized entertainment-topic kill test.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Entertainment category over-merge guard."
+      }
+    },
+    {
+      "id": "TN-C011",
+      "kind": "uncertainty",
+      "articleIds": ["TN-B003", "TN-B009"],
+      "expectedRelation": "preserve-uncertainty",
+      "evaluationFocus": "Summaries must preserve conditional language for unconfirmed device pricing and battery rumors.",
+      "knownUncertainty": "The source evidence and attribution for each rumor still require article-level review.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Single benchmark case covers two independent rumor-preservation examples."
+      }
+    },
+    {
+      "id": "TN-C012",
+      "kind": "uncertainty",
+      "articleIds": ["TN-B017", "TN-B020", "TN-B026"],
+      "expectedRelation": "preserve-uncertainty",
+      "evaluationFocus": "Allegations, lawsuits, and suspected cheating must not be rewritten as established facts.",
+      "knownUncertainty": "Legal and sports allegations require explicit source attribution and claim-status preservation.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "High-risk factuality kill test."
+      }
+    },
+    {
+      "id": "TN-C013",
+      "kind": "numeric-fact",
+      "articleIds": ["TN-B004", "TN-B005", "TN-B012", "TN-B020", "TN-B023", "TN-B030"],
+      "expectedRelation": "preserve-numeric-facts",
+      "evaluationFocus": "Models and evaluators must preserve amounts, scores, time spans, and user-count magnitudes without cross-case contamination.",
+      "knownUncertainty": "Required exact claims are not accepted until each article receives human claim labeling.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Inventory case only; exact required facts remain deferred to human claim review."
+      }
+    },
+    {
+      "id": "TN-C014",
+      "kind": "developing-story",
+      "articleIds": ["TN-B014", "TN-B019"],
+      "expectedRelation": "preserve-timeline",
+      "evaluationFocus": "Developing stories should retain chronology and avoid treating a later resolution as if it were always known.",
+      "knownUncertainty": "These are separate stories used as timeline-behavior examples, not a pair to cluster together.",
+      "labelProvenance": {
+        "status": "provisional",
+        "method": "project-seed",
+        "reviewedBy": [],
+        "notes": "Timeline behavior inventory; event-specific follow-up articles still need to be added."
+      }
+    }
+  ]
+}
