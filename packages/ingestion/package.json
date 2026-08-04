@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./article": "./src/article.ts",
+    "./article": "./src/article-normalized.ts",
     "./rss": "./src/rss.ts",
     "./source-registry": "./src/source-registry.ts"
   }
