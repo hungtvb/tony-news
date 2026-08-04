@@ -1,15 +1,16 @@
 name: Repair PR 11 persistence edge cases
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/postgres-repository-integration
+      - main
 
 permissions:
   contents: write
 
 jobs:
   repair:
+    if: github.head_ref == 'feat/postgres-repository-integration'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     services:
