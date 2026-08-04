@@ -6,6 +6,7 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test packages/**/*.test.ts",
+    "test:integration": "node --experimental-strip-types --test packages/**/*.integration.ts",
     "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
     "rss:smoke": "node --experimental-strip-types apps/worker/src/rss-smoke.ts",
     "article:smoke": "node --experimental-strip-types apps/worker/src/article-smoke.ts",
@@ -14,6 +15,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@types/pg": "8.20.0",
     "drizzle-kit": "0.31.10",
     "typescript": "^5.8.3"
   },
