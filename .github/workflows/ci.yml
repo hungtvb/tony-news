@@ -34,6 +34,17 @@ jobs:
       - name: Unit tests
         run: pnpm test
 
+      - name: Verify database migration is reproducible
+        shell: bash
+        run: |
+          pnpm db:generate
+          status=$(git status --porcelain -- packages/db/drizzle)
+          if [ -n "$status" ]; then
+            echo "$status"
+            git diff -- packages/db/drizzle
+            exit 1
+          fi
+
       - name: Live RSS smoke
         id: live-rss-smoke
         continue-on-error: true

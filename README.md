@@ -12,8 +12,9 @@ The first vertical slice validates:
 
 1. RSS discovery from nine Vietnamese feeds.
 2. Direct article fetching and normalization.
-3. Conservative story clustering.
-4. OpenCode free-model structured outputs and citation safety.
+3. Idempotent article persistence and version history.
+4. Conservative story clustering.
+5. OpenCode free-model structured outputs and citation safety.
 
 ## Repository layout
 
@@ -22,6 +23,7 @@ apps/
   worker/          Phase 0 operational CLIs and future queue consumers
   web/             Reader/admin application boundary
 packages/
+  db/              Drizzle schema, migrations, persistence contracts
   ingestion/       Source registry, RSS parsing and acquisition contracts
 docs/
   adr/             Architecture decisions
@@ -68,7 +70,40 @@ Current Phase 0 content boundaries:
 - Tuổi Trẻ: `div.detail-content.afcbc-body`
 - Thanh Niên: generic article container fallback
 
-Only `qualityDecision: ready` is eligible for automatic downstream AI processing.
+Only `qualityDecision: ready` is eligible for automatic downstream persistence and AI processing.
+
+## PostgreSQL persistence
+
+The Phase 0 database schema uses Drizzle ORM and PostgreSQL. It contains:
+
+- sources and source endpoints;
+- canonical mutable article heads;
+- `article_sources` provenance links, allowing one article to appear in multiple feeds/categories;
+- immutable article versions;
+- ingestion runs with idempotency keys;
+- typed processing failures.
+
+Article lookup prefers a stable `(source_id, source_article_id)` link when available and falls back to canonical URL. Two feeds that discover the same canonical URL create two provenance links, not two articles or two content versions.
+
+Article persistence follows three outcomes:
+
+```text
+new identity + content hash       → create article + source link + version 1
+existing identity + same hash     → upsert source link, refresh head metadata
+existing identity + changed hash  → upsert source link, append version N+1
+```
+
+AI is not part of this transaction. A persisted article version can be processed later when an AI route is available.
+
+Generate a migration after changing the schema:
+
+```bash
+pnpm db:generate
+```
+
+Generated SQL and Drizzle metadata under `packages/db/drizzle` must be committed. CI regenerates migrations and fails for tracked drift or untracked generated files.
+
+The initial migration has not yet been applied to a preview or production Supabase project.
 
 ## Structure diagnostics
 
@@ -101,6 +136,9 @@ The regular polling path does not use Browser Run `/crawl`; crawl remains reserv
 ```bash
 pnpm typecheck
 pnpm test
+pnpm db:generate
+status=$(git status --porcelain -- packages/db/drizzle)
+test -z "$status"
 ```
 
 ## Documentation
