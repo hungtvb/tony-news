@@ -216,10 +216,6 @@ export const articleVersions = pgTable(
       table.articleId,
       table.versionNumber,
     ),
-    uniqueIndex("article_versions_article_hash_uq").on(
-      table.articleId,
-      table.contentHash,
-    ),
     index("article_versions_article_created_idx").on(
       table.articleId,
       table.createdAt,

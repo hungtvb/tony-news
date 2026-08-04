@@ -25,12 +25,12 @@ News articles can change without changing their URL. Conversely, a publisher can
    - partial unique `(source_id, source_article_id)` when an ID exists.
 5. `article_versions` is append-only at the domain boundary:
    - unique `(article_id, version_number)`;
-   - unique `(article_id, content_hash)`;
+   - non-adjacent versions may repeat a content hash when a publisher restores previously published content;
    - normalized text, extraction evidence, quality decision, and optional raw-artifact reference.
 6. Persistence runs inside one repository transaction:
    - no existing identity → create article, source link, and version 1;
    - same content hash → upsert the source link and refresh article head/last-seen metadata without another version;
-   - changed content hash → upsert the source link, append the next immutable version, then advance the head.
+   - changed content hash → upsert the source link, append the next immutable version, then advance the head, even when that hash appeared in an older non-current version.
 7. Article lookup prefers stable `(source_id, source_article_id)` links when available, then falls back to canonical URL.
 8. A stable source identity may refresh a changed canonical URL without creating a content version when the content hash is unchanged.
 9. Multiple feeds may link to the same canonical article without overwriting each other or creating duplicate article versions.
