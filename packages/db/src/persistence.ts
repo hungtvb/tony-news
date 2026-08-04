@@ -33,7 +33,8 @@ export interface StoredArticleHead {
   currentVersionNumber: number;
 }
 
-export interface NewArticleHead extends ArticleIdentity {
+export interface NewArticleHead {
+  canonicalUrl: string;
   title: string;
   author?: string;
   authorStatus: ArticleSnapshot["authorStatus"];
@@ -43,6 +44,13 @@ export interface NewArticleHead extends ArticleIdentity {
   currentVersionNumber: number;
   firstSeenAt: Date;
   lastSeenAt: Date;
+}
+
+export interface ArticleSourceLink {
+  articleId: string;
+  sourceId: string;
+  sourceArticleId?: string;
+  observedAt: Date;
 }
 
 export interface NewArticleVersion {
@@ -64,8 +72,9 @@ export interface NewArticleVersion {
   rawArtifactKey?: string;
 }
 
-export interface UpdateArticleHead extends ArticleIdentity {
+export interface UpdateArticleHead {
   articleId: string;
+  canonicalUrl: string;
   title: string;
   author?: string;
   authorStatus: ArticleSnapshot["authorStatus"];
@@ -79,6 +88,7 @@ export interface UpdateArticleHead extends ArticleIdentity {
 export interface ArticlePersistenceTransaction {
   findArticleForUpdate(identity: ArticleIdentity): Promise<StoredArticleHead | undefined>;
   insertArticle(input: NewArticleHead): Promise<StoredArticleHead>;
+  upsertArticleSourceLink(input: ArticleSourceLink): Promise<void>;
   insertArticleVersion(input: NewArticleVersion): Promise<void>;
   updateArticleHead(input: UpdateArticleHead): Promise<void>;
 }
@@ -93,15 +103,6 @@ export interface PersistArticleResult {
   outcome: PersistArticleOutcome;
   articleId: string;
   versionNumber: number;
-}
-
-function identityFields(identity: ArticleIdentity): ArticleIdentity {
-  const result: ArticleIdentity = {
-    sourceId: identity.sourceId,
-    canonicalUrl: identity.canonicalUrl,
-  };
-  if (identity.sourceArticleId) result.sourceArticleId = identity.sourceArticleId;
-  return result;
 }
 
 function headOptionalFields(snapshot: ArticleSnapshot): {
@@ -150,6 +151,19 @@ function versionOptionalFields(snapshot: ArticleSnapshot): {
   return result;
 }
 
+function sourceLinkInput(
+  articleId: string,
+  snapshot: ArticleSnapshot,
+): ArticleSourceLink {
+  const result: ArticleSourceLink = {
+    articleId,
+    sourceId: snapshot.sourceId,
+    observedAt: snapshot.observedAt,
+  };
+  if (snapshot.sourceArticleId) result.sourceArticleId = snapshot.sourceArticleId;
+  return result;
+}
+
 function versionInput(
   articleId: string,
   versionNumber: number,
@@ -178,7 +192,7 @@ function headUpdateInput(
 ): UpdateArticleHead {
   return {
     articleId,
-    ...identityFields(snapshot),
+    canonicalUrl: snapshot.canonicalUrl,
     title: snapshot.title,
     authorStatus: snapshot.authorStatus,
     currentContentHash,
@@ -199,12 +213,11 @@ export async function persistArticleSnapshot(
   }
 
   return repository.transaction(async (transaction) => {
-    const identity = identityFields(snapshot);
-    const existing = await transaction.findArticleForUpdate(identity);
+    const existing = await transaction.findArticleForUpdate(snapshot);
 
     if (!existing) {
       const article = await transaction.insertArticle({
-        ...identity,
+        canonicalUrl: snapshot.canonicalUrl,
         title: snapshot.title,
         authorStatus: snapshot.authorStatus,
         currentContentHash: snapshot.contentHash,
@@ -214,6 +227,9 @@ export async function persistArticleSnapshot(
         ...headOptionalFields(snapshot),
       });
 
+      await transaction.upsertArticleSourceLink(
+        sourceLinkInput(article.id, snapshot),
+      );
       await transaction.insertArticleVersion(
         versionInput(article.id, 1, snapshot),
       );
@@ -224,6 +240,10 @@ export async function persistArticleSnapshot(
         versionNumber: 1,
       };
     }
+
+    await transaction.upsertArticleSourceLink(
+      sourceLinkInput(existing.id, snapshot),
+    );
 
     if (existing.currentContentHash === snapshot.contentHash) {
       await transaction.updateArticleHead(
