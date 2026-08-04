@@ -35,7 +35,7 @@ const ENTITY_MAP: Readonly<Record<string, string>> = {
   apos: "'",
   gt: ">",
   lt: "<",
-  quot: "\"",
+  quot: '"',
 };
 
 function decodeXmlEntities(value: string): string {
@@ -110,12 +110,24 @@ function parseItem(block: string, format: "rss" | "atom"): RssItem | undefined {
     return undefined;
   }
 
-  return {
-    title,
-    link,
-    publishedAt: firstTagValue(block, ["pubDate", "published", "updated", "dc:date"]),
-    guid: firstTagValue(block, ["guid", "id"]),
-  };
+  const item: RssItem = { title, link };
+  const publishedAt = firstTagValue(block, [
+    "pubDate",
+    "published",
+    "updated",
+    "dc:date",
+  ]);
+  const guid = firstTagValue(block, ["guid", "id"]);
+
+  if (publishedAt) {
+    item.publishedAt = publishedAt;
+  }
+
+  if (guid) {
+    item.guid = guid;
+  }
+
+  return item;
 }
 
 function extractBlocks(xml: string, tagName: "item" | "entry"): string[] {
@@ -163,11 +175,14 @@ export function parseRssFeed(xml: string): ParsedFeed {
     trimmed.match(/<feed(?:\s[^>]*)?>([\s\S]*?)<\/feed>/i)?.[1] ??
     "";
 
-  return {
-    format,
-    title: firstTagValue(channelOrFeed, ["title"]),
-    items,
-  };
+  const feed: ParsedFeed = { format, items };
+  const title = firstTagValue(channelOrFeed, ["title"]);
+
+  if (title) {
+    feed.title = title;
+  }
+
+  return feed;
 }
 
 function latestPublishedAt(items: readonly RssItem[]): string | undefined {
@@ -216,9 +231,7 @@ export async function fetchAndInspectFeed(
     }
 
     const feed = parseRssFeed(xml);
-    const latest = latestPublishedAt(feed.items);
-
-    return {
+    const result: FeedInspectionResult = {
       sourceId: source.id,
       publisher: source.publisher,
       category: source.category,
@@ -226,10 +239,19 @@ export async function fetchAndInspectFeed(
       ok: true,
       durationMs: Math.round(performance.now() - startedAt),
       httpStatus: response.status,
-      ...(contentType ? { contentType } : {}),
       itemCount: feed.items.length,
-      ...(latest ? { latestPublishedAt: latest } : {}),
     };
+    const latest = latestPublishedAt(feed.items);
+
+    if (contentType) {
+      result.contentType = contentType;
+    }
+
+    if (latest) {
+      result.latestPublishedAt = latest;
+    }
+
+    return result;
   } catch (error: unknown) {
     const message =
       error instanceof Error && error.name === "AbortError"
