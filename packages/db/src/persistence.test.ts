@@ -1,0 +1,242 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+
+import {
+  persistArticleSnapshot,
+  type ArticleIdentity,
+  type ArticlePersistenceRepository,
+  type ArticlePersistenceTransaction,
+  type ArticleSnapshot,
+  type NewArticleHead,
+  type NewArticleVersion,
+  type StoredArticleHead,
+  type UpdateArticleHead,
+} from "./persistence.ts";
+
+class InMemoryArticleRepository implements ArticlePersistenceRepository {
+  readonly articles = new Map<string, NewArticleHead & StoredArticleHead>();
+  readonly articleIdByCanonicalUrl = new Map<string, string>();
+  readonly articleIdBySourceIdentity = new Map<string, string>();
+  readonly versions: NewArticleVersion[] = [];
+  transactionCount = 0;
+  touched: Array<{ articleId: string; observedAt: Date }> = [];
+  #nextId = 1;
+
+  async transaction<T>(
+    operation: (transaction: ArticlePersistenceTransaction) => Promise<T>,
+  ): Promise<T> {
+    this.transactionCount += 1;
+
+    const transaction: ArticlePersistenceTransaction = {
+      findArticleForUpdate: async (identity) => this.find(identity),
+      insertArticle: async (input) => this.insert(input),
+      insertArticleVersion: async (input) => {
+        const duplicate = this.versions.some(
+          (version) =>
+            version.articleId === input.articleId &&
+            (version.versionNumber === input.versionNumber ||
+              version.contentHash === input.contentHash),
+        );
+        if (duplicate) throw new Error("duplicate article version");
+        this.versions.push(input);
+      },
+      updateArticleHead: async (input) => this.update(input),
+      touchArticle: async (articleId, observedAt) => {
+        const article = this.articles.get(articleId);
+        if (!article) throw new Error("article not found");
+        article.lastSeenAt = observedAt;
+        this.touched.push({ articleId, observedAt });
+      },
+    };
+
+    return operation(transaction);
+  }
+
+  private sourceIdentity(identity: ArticleIdentity): string | undefined {
+    return identity.sourceArticleId
+      ? `${identity.sourceId}:${identity.sourceArticleId}`
+      : undefined;
+  }
+
+  private find(identity: ArticleIdentity): StoredArticleHead | undefined {
+    const sourceIdentity = this.sourceIdentity(identity);
+    const articleId =
+      (sourceIdentity
+        ? this.articleIdBySourceIdentity.get(sourceIdentity)
+        : undefined) ?? this.articleIdByCanonicalUrl.get(identity.canonicalUrl);
+    if (!articleId) return undefined;
+
+    const article = this.articles.get(articleId);
+    if (!article) return undefined;
+    return {
+      id: article.id,
+      currentContentHash: article.currentContentHash,
+      currentVersionNumber: article.currentVersionNumber,
+    };
+  }
+
+  private insert(input: NewArticleHead): StoredArticleHead {
+    if (this.articleIdByCanonicalUrl.has(input.canonicalUrl)) {
+      throw new Error("duplicate canonical URL");
+    }
+
+    const sourceIdentity = this.sourceIdentity(input);
+    if (sourceIdentity && this.articleIdBySourceIdentity.has(sourceIdentity)) {
+      throw new Error("duplicate source identity");
+    }
+
+    const id = `article-${this.#nextId}`;
+    this.#nextId += 1;
+    const article = { ...input, id };
+    this.articles.set(id, article);
+    this.articleIdByCanonicalUrl.set(input.canonicalUrl, id);
+    if (sourceIdentity) this.articleIdBySourceIdentity.set(sourceIdentity, id);
+
+    return {
+      id,
+      currentContentHash: input.currentContentHash,
+      currentVersionNumber: input.currentVersionNumber,
+    };
+  }
+
+  private update(input: UpdateArticleHead): void {
+    const article = this.articles.get(input.articleId);
+    if (!article) throw new Error("article not found");
+
+    article.title = input.title;
+    article.authorStatus = input.authorStatus;
+    article.currentContentHash = input.currentContentHash;
+    article.currentVersionNumber = input.currentVersionNumber;
+    article.lastSeenAt = input.lastSeenAt;
+
+    if (input.author) article.author = input.author;
+    else delete article.author;
+    if (input.publishedAt) article.publishedAt = input.publishedAt;
+    else delete article.publishedAt;
+    if (input.sourceUpdatedAt) article.sourceUpdatedAt = input.sourceUpdatedAt;
+    else delete article.sourceUpdatedAt;
+  }
+}
+
+function snapshot(overrides: Partial<ArticleSnapshot> = {}): ArticleSnapshot {
+  return {
+    sourceId: "tto-tech",
+    sourceArticleId: "100260801212001232",
+    canonicalUrl: "https://tuoitre.vn/example.htm",
+    title: "Google tạm dừng AI tạo ảnh",
+    author: "HOÀNG THI",
+    authorStatus: "reported",
+    publishedAt: new Date("2026-08-01T15:05:00Z"),
+    sourceUpdatedAt: new Date("2026-08-01T15:49:00Z"),
+    contentHash: "hash-v1",
+    normalizedText: "Nội dung phiên bản một đủ dài để persistence không phụ thuộc AI.",
+    textLength: 68,
+    paragraphCount: 3,
+    extractionStrategy: "publisher-container",
+    extractionSelector: "div.detail-content.afcbc-body",
+    qualityDecision: "ready",
+    qualityWarnings: [],
+    observedAt: new Date("2026-08-04T01:00:00Z"),
+    ...overrides,
+  };
+}
+
+test("creates an article and immutable version in one transaction", async () => {
+  const repository = new InMemoryArticleRepository();
+  const result = await persistArticleSnapshot(repository, snapshot());
+
+  assert.deepEqual(result, {
+    outcome: "created",
+    articleId: "article-1",
+    versionNumber: 1,
+  });
+  assert.equal(repository.transactionCount, 1);
+  assert.equal(repository.articles.size, 1);
+  assert.equal(repository.versions.length, 1);
+  assert.equal(repository.versions[0]?.contentHash, "hash-v1");
+});
+
+test("does not append a version when the content hash is unchanged", async () => {
+  const repository = new InMemoryArticleRepository();
+  await persistArticleSnapshot(repository, snapshot());
+
+  const observedAt = new Date("2026-08-04T02:00:00Z");
+  const result = await persistArticleSnapshot(
+    repository,
+    snapshot({ observedAt }),
+  );
+
+  assert.equal(result.outcome, "unchanged");
+  assert.equal(result.versionNumber, 1);
+  assert.equal(repository.articles.size, 1);
+  assert.equal(repository.versions.length, 1);
+  assert.equal(repository.touched.length, 1);
+  assert.equal(repository.touched[0]?.observedAt, observedAt);
+});
+
+test("appends an immutable version and advances the article head", async () => {
+  const repository = new InMemoryArticleRepository();
+  await persistArticleSnapshot(repository, snapshot());
+
+  const result = await persistArticleSnapshot(
+    repository,
+    snapshot({
+      contentHash: "hash-v2",
+      normalizedText: "Nội dung phiên bản hai đã được nguồn cập nhật.",
+      title: "Google cập nhật quyết định về AI tạo ảnh",
+      observedAt: new Date("2026-08-04T03:00:00Z"),
+    }),
+  );
+
+  assert.deepEqual(result, {
+    outcome: "version-appended",
+    articleId: "article-1",
+    versionNumber: 2,
+  });
+  assert.equal(repository.articles.size, 1);
+  assert.equal(repository.versions.length, 2);
+  assert.deepEqual(
+    repository.versions.map((version) => version.contentHash),
+    ["hash-v1", "hash-v2"],
+  );
+  assert.equal(
+    repository.articles.get("article-1")?.currentContentHash,
+    "hash-v2",
+  );
+  assert.equal(
+    repository.articles.get("article-1")?.currentVersionNumber,
+    2,
+  );
+});
+
+test("resolves the same article by source identity even when URL changes", async () => {
+  const repository = new InMemoryArticleRepository();
+  await persistArticleSnapshot(repository, snapshot());
+
+  const result = await persistArticleSnapshot(
+    repository,
+    snapshot({
+      canonicalUrl: "https://tuoitre.vn/example-updated.htm",
+      observedAt: new Date("2026-08-04T04:00:00Z"),
+    }),
+  );
+
+  assert.equal(result.outcome, "unchanged");
+  assert.equal(repository.articles.size, 1);
+  assert.equal(repository.versions.length, 1);
+});
+
+test("rejects content that has not passed extraction quality gates", async () => {
+  const repository = new InMemoryArticleRepository();
+
+  await assert.rejects(
+    persistArticleSnapshot(
+      repository,
+      snapshot({ qualityDecision: "fallback-required" }),
+    ),
+    /must be quality-ready/,
+  );
+
+  assert.equal(repository.transactionCount, 0);
+  assert.equal(repository.articles.size, 0);
+});
