@@ -25,12 +25,12 @@ News articles can change without changing their URL. Conversely, a publisher can
    - partial unique `(source_id, source_article_id)` when an ID exists.
 5. `article_versions` is append-only at the domain boundary:
    - unique `(article_id, version_number)`;
-   - unique `(article_id, content_hash)`;
+   - non-adjacent versions may repeat a content hash when a publisher restores previously published content;
    - normalized text, extraction evidence, quality decision, and optional raw-artifact reference.
 6. Persistence runs inside one repository transaction:
    - no existing identity → create article, source link, and version 1;
    - same content hash → upsert the source link and refresh article head/last-seen metadata without another version;
-   - changed content hash → upsert the source link, append the next immutable version, then advance the head.
+   - changed content hash → upsert the source link, append the next immutable version, then advance the head, even when that hash appeared in an older non-current version.
 7. Article lookup prefers stable `(source_id, source_article_id)` links when available, then falls back to canonical URL.
 8. A stable source identity may refresh a changed canonical URL without creating a content version when the content hash is unchanged.
 9. Multiple feeds may link to the same canonical article without overwriting each other or creating duplicate article versions.
@@ -61,17 +61,20 @@ It also creates the supporting PostgreSQL enums, foreign keys, partial/composite
 
 ## Verification
 
-The persistence contract is tested with a deterministic in-memory transactional repository. Tests prove:
+The domain contract remains covered by deterministic unit tests. The concrete Drizzle/node-postgres repository is also exercised against PostgreSQL 17 in CI. The combined suites prove:
 
 - first ingestion creates one article, one source link, and one version;
 - repeated unchanged ingestion does not create a duplicate version;
 - metadata and canonical identity can refresh without changing the version;
 - changed content appends exactly one immutable version and advances the head;
+- content restored to a previously observed non-current hash appends a new immutable version;
 - the same canonical article discovered through another feed creates another `article_sources` link but not another article/version;
+- concurrent first discovery is re-read/retried without duplicate rows;
+- article, provenance, and version writes roll back together when a transaction fails;
 - non-ready extraction output is rejected before opening a transaction;
 - ingestion status transitions and retry decisions are validated.
 
-The initial PostgreSQL migration was generated and committed by Drizzle Kit in a trusted GitHub Actions run, then CI was returned to read-only migration-drift verification.
+CI applies migrations from an empty PostgreSQL database, enforces a frozen pnpm lockfile, and regenerates Drizzle metadata to detect migration drift.
 
 ## Consequences
 
@@ -87,15 +90,14 @@ The initial PostgreSQL migration was generated and committed by Drizzle Kit in a
 ### Negative
 
 - Article text versions consume more storage than overwriting a single row.
-- A concrete Drizzle/Postgres repository adapter is still required before deployment.
 - Database migrations have not yet been applied to a production or preview Supabase project.
-- Concurrent insert races must be handled by the concrete adapter using database unique violations and transaction retry/re-read logic.
-- Canonical URL conflicts across genuinely distinct publisher articles need an explicit collision policy in the concrete adapter.
+- Production connection limits, transaction isolation, and Hyperdrive behavior still require environment-specific evidence.
+- Canonical URL conflicts across genuinely distinct publisher articles need an explicit collision policy.
 
 ## Deferred
 
 - Live Supabase preview migration and rollback evidence.
-- Concrete Drizzle repository implementation and connection pooling.
+- Cloudflare Hyperdrive resource creation and production connection tuning.
 - Cloudflare Queue consumers.
 - Story, claim, summary, and citation tables.
 - Retention/archival policy for historical normalized text and raw artifacts.

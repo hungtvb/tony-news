@@ -1,0 +1,1 @@
+DROP INDEX "article_versions_article_hash_uq";

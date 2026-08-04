@@ -8,6 +8,13 @@
       "when": 1785808326049,
       "tag": "0000_easy_morlun",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785825019988,
+      "tag": "0001_stormy_wendell_rand",
+      "breakpoints": true
     }
   ]
 }
