@@ -117,14 +117,6 @@ jobs:
 
           '''
           test_file.write_text(text.replace(marker, regression + marker, 1))
-
-          ci = Path(".github/workflows/ci.yml")
-          text = ci.read_text()
-          old = "run: pnpm install --no-frozen-lockfile"
-          new = "run: pnpm install --frozen-lockfile"
-          if old not in text:
-              raise SystemExit("expected CI install command not found")
-          ci.write_text(text.replace(old, new, 1))
           PY
 
       - name: Install and generate migration
@@ -142,10 +134,9 @@ jobs:
 
       - name: Commit generated repair
         run: |
-          rm .github/workflows/repair-pr11.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add docs/adr/0004-postgres-persistence-and-article-versioning.md packages/db/src/schema.ts packages/db/src/node-postgres.integration.ts packages/db/drizzle pnpm-lock.yaml
           if git diff --cached --quiet; then
             echo "No repair changes to commit"
             exit 0
