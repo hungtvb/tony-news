@@ -34,7 +34,7 @@ docs/
 
 ```bash
 corepack enable
-pnpm install
+pnpm install --frozen-lockfile
 pnpm rss:smoke
 ```
 
@@ -93,7 +93,7 @@ existing identity + same hash     → upsert source link, refresh head metadata
 existing identity + changed hash  → upsert source link, append version N+1
 ```
 
-AI is not part of this transaction. A persisted article version can be processed later when an AI route is available.
+A publisher restoring an older content hash still appends a new chronological version; identical non-adjacent hashes are allowed. AI is not part of this transaction. A persisted article version can be processed later when an AI route is available.
 
 Generate a migration after changing the schema:
 
@@ -103,7 +103,14 @@ pnpm db:generate
 
 Generated SQL and Drizzle metadata under `packages/db/drizzle` must be committed. CI regenerates migrations and fails for tracked drift or untracked generated files.
 
-The initial migration has not yet been applied to a preview or production Supabase project.
+Run the real PostgreSQL integration suite with an empty test database:
+
+```bash
+DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/tony_news_test \
+  pnpm test:integration
+```
+
+The repository exposes a Node/CI pool factory and a Cloudflare Hyperdrive client factory. Production Supabase and Hyperdrive resources have not been created or modified.
 
 ## Structure diagnostics
 
@@ -134,6 +141,7 @@ The regular polling path does not use Browser Run `/crawl`; crawl remains reserv
 ## Verification
 
 ```bash
+pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
 pnpm db:generate
