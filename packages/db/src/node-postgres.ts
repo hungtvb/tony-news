@@ -50,6 +50,8 @@ interface PostgreSqlErrorShape {
   table?: string;
 }
 
+type UniqueViolationError = PostgreSqlErrorShape & { code: "23505" };
+
 function assertPostgresConnectionString(value: string): string {
   const trimmed = value.trim();
   if (!/^postgres(?:ql)?:\/\//i.test(trimmed)) {
@@ -62,7 +64,9 @@ function isPostgreSqlErrorShape(value: unknown): value is PostgreSqlErrorShape {
   return typeof value === "object" && value !== null;
 }
 
-export function isUniqueViolation(error: unknown): boolean {
+export function isUniqueViolation(
+  error: unknown,
+): error is UniqueViolationError {
   return isPostgreSqlErrorShape(error) && error.code === "23505";
 }
 
