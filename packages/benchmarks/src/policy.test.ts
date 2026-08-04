@@ -72,10 +72,10 @@ describe("benchmark policy", () => {
 
   test("rejects relation-kind mismatch and missing same-event cluster ID", () => {
     const value = manifest();
+    const { expectedClusterId: _removed, ...withoutClusterId } = value.cases[0]!;
     value.cases[0] = {
-      ...value.cases[0]!,
+      ...withoutClusterId,
       expectedRelation: "different-event",
-      expectedClusterId: undefined,
     };
 
     const issues = validateBenchmarkCaseSemantics(value);
