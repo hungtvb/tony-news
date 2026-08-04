@@ -12,8 +12,9 @@ The first vertical slice validates:
 
 1. RSS discovery from nine Vietnamese feeds.
 2. Direct article fetching and normalization.
-3. Conservative story clustering.
-4. OpenCode free-model structured outputs and citation safety.
+3. Idempotent article persistence and version history.
+4. Conservative story clustering.
+5. OpenCode free-model structured outputs and citation safety.
 
 ## Repository layout
 
@@ -22,6 +23,7 @@ apps/
   worker/          Phase 0 operational CLIs and future queue consumers
   web/             Reader/admin application boundary
 packages/
+  db/              Drizzle schema, migrations, persistence contracts
   ingestion/       Source registry, RSS parsing and acquisition contracts
 docs/
   adr/             Architecture decisions
@@ -68,7 +70,37 @@ Current Phase 0 content boundaries:
 - Tuổi Trẻ: `div.detail-content.afcbc-body`
 - Thanh Niên: generic article container fallback
 
-Only `qualityDecision: ready` is eligible for automatic downstream AI processing.
+Only `qualityDecision: ready` is eligible for automatic downstream persistence and AI processing.
+
+## PostgreSQL persistence
+
+The Phase 0 database schema uses Drizzle ORM and PostgreSQL. It contains:
+
+- sources and source endpoints;
+- mutable article heads;
+- immutable article versions;
+- ingestion runs with idempotency keys;
+- typed processing failures.
+
+Article persistence follows three outcomes:
+
+```text
+new identity + content hash       → created, version 1
+existing identity + same hash     → unchanged, refresh head metadata
+existing identity + changed hash  → append version N+1, advance head
+```
+
+AI is not part of this transaction. A persisted article version can be processed later when an AI route is available.
+
+Generate a migration after changing the schema:
+
+```bash
+pnpm db:generate
+```
+
+Generated SQL and Drizzle metadata under `packages/db/drizzle` must be committed. CI regenerates migrations and fails when the committed output is stale.
+
+The initial migration has not yet been applied to a production Supabase project.
 
 ## Structure diagnostics
 
@@ -101,6 +133,8 @@ The regular polling path does not use Browser Run `/crawl`; crawl remains reserv
 ```bash
 pnpm typecheck
 pnpm test
+pnpm db:generate
+git diff --exit-code -- packages/db/drizzle
 ```
 
 ## Documentation
