@@ -5,10 +5,11 @@ import {
   type ArticleTarget,
 } from "./article-normalized.ts";
 
+const CLOUDFLARE_API_BASE_URL = "https://api.cloudflare.com/client/v4";
+
 export interface BrowserRunConfig {
   accountId: string;
   apiToken: string;
-  apiBaseUrl?: string;
   timeoutMs?: number;
 }
 
@@ -105,10 +106,6 @@ export async function fetchBrowserMarkdown(
   const requestedUrl = validateArticleUrl(target.publisher, target.url).toString();
   const accountId = requiredSecret(config.accountId, "CLOUDFLARE_ACCOUNT_ID");
   const apiToken = requiredSecret(config.apiToken, "CLOUDFLARE_API_TOKEN");
-  const apiBaseUrl = (config.apiBaseUrl ?? "https://api.cloudflare.com/client/v4").replace(
-    /\/$/,
-    "",
-  );
   const timeoutMs = config.timeoutMs ?? 30_000;
   const fetchImpl = options.fetchImpl ?? fetch;
 
@@ -121,7 +118,7 @@ export async function fetchBrowserMarkdown(
 
   try {
     const response = await fetchImpl(
-      `${apiBaseUrl}/accounts/${encodeURIComponent(accountId)}/browser-rendering/markdown`,
+      `${CLOUDFLARE_API_BASE_URL}/accounts/${encodeURIComponent(accountId)}/browser-rendering/markdown`,
       {
         method: "POST",
         headers: {
