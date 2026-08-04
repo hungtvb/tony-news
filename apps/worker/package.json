@@ -1,0 +1,5 @@
+{
+  "name": "@tony-news/worker",
+  "private": true,
+  "type": "module"
+}

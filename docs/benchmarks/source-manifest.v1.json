@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-08-04T00:29:00Z",
+  "status": "phase-0-poc",
+  "legalBoundary": "Internal benchmark only. Do not republish full article content.",
+  "sources": [
+    {
+      "id": "vne-tech",
+      "category": "technology",
+      "publisher": "VnExpress",
+      "feedUrl": "https://vnexpress.net/rss/khoa-hoc-cong-nghe.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "tto-tech",
+      "category": "technology",
+      "publisher": "Tuổi Trẻ",
+      "feedUrl": "https://tuoitre.vn/nhip-song-so.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "tn-tech",
+      "category": "technology",
+      "publisher": "Thanh Niên",
+      "feedUrl": "https://thanhnien.vn/rss/cong-nghe.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "vne-ent",
+      "category": "entertainment",
+      "publisher": "VnExpress",
+      "feedUrl": "https://vnexpress.net/rss/giai-tri.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "tto-ent",
+      "category": "entertainment",
+      "publisher": "Tuổi Trẻ",
+      "feedUrl": "https://tuoitre.vn/giai-tri.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "tn-ent",
+      "category": "entertainment",
+      "publisher": "Thanh Niên",
+      "feedUrl": "https://thanhnien.vn/rss/giai-tri.rss",
+      "pollMinutes": 15
+    },
+    {
+      "id": "vne-sport",
+      "category": "sports",
+      "publisher": "VnExpress",
+      "feedUrl": "https://vnexpress.net/rss/the-thao.rss",
+      "pollMinutes": 10
+    },
+    {
+      "id": "tto-sport",
+      "category": "sports",
+      "publisher": "Tuổi Trẻ",
+      "feedUrl": "https://tuoitre.vn/the-thao.rss",
+      "pollMinutes": 10
+    },
+    {
+      "id": "tn-sport",
+      "category": "sports",
+      "publisher": "Thanh Niên",
+      "feedUrl": "https://thanhnien.vn/rss/the-thao.rss",
+      "pollMinutes": 10
+    }
+  ]
+}
