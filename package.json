@@ -6,7 +6,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test packages/**/*.test.ts",
-    "rss:smoke": "node --experimental-strip-types apps/worker/src/rss-smoke.ts"
+    "rss:smoke": "node --experimental-strip-types apps/worker/src/rss-smoke.ts",
+    "article:smoke": "node --experimental-strip-types apps/worker/src/article-smoke.ts"
   },
   "devDependencies": {
     "@types/node": "^22.15.0",

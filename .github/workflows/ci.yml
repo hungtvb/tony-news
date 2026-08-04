@@ -54,3 +54,24 @@ jobs:
           path: rss-smoke.json
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Live article extraction smoke
+        id: live-article-smoke
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node --experimental-strip-types apps/worker/src/article-smoke.ts --json > article-smoke.json 2>&1
+          status=$?
+          cat article-smoke.json
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload article smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-smoke-evidence
+          path: article-smoke.json
+          if-no-files-found: warn
+          retention-days: 14
