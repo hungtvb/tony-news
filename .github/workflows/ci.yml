@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Live RSS smoke
+        id: live-rss-smoke
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node --experimental-strip-types apps/worker/src/rss-smoke.ts --json > rss-smoke.json 2>&1
+          status=$?
+          cat rss-smoke.json
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload RSS smoke evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rss-smoke-evidence
+          path: rss-smoke.json
+          if-no-files-found: warn
+          retention-days: 14

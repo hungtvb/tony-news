@@ -1,0 +1,9 @@
+{
+  "name": "@tony-news/ingestion",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./rss": "./src/rss.ts",
+    "./source-registry": "./src/source-registry.ts"
+  }
+}
