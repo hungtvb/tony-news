@@ -50,24 +50,23 @@ jobs:
 
           schema = Path("packages/db/src/schema.ts")
           text = schema.read_text()
-          old = '''    uniqueIndex("article_versions_article_hash_uq").on(
-              table.articleId,
-              table.contentHash,
-            ),
-          '''
-          if old not in text:
-              raise SystemExit("expected article hash unique index block not found")
-          schema.write_text(text.replace(old, "", 1))
+          start_marker = '    uniqueIndex("article_versions_article_hash_uq").on('
+          end_marker = '    index("article_versions_article_created_idx").on('
+          start = text.find(start_marker)
+          end = text.find(end_marker, start)
+          if start < 0 or end < 0:
+              raise SystemExit("expected article hash unique index boundaries not found")
+          schema.write_text(text[:start] + text[end:])
 
           adr = Path("docs/adr/0004-postgres-persistence-and-article-versioning.md")
           text = adr.read_text()
-          old = "   - unique `(article_id, content_hash)`;"
-          new = "   - non-adjacent versions may repeat a content hash when a publisher restores previously published content;"
+          old = "unique `(article_id, content_hash)`;"
+          new = "non-adjacent versions may repeat a content hash when a publisher restores previously published content;"
           if old not in text:
               raise SystemExit("expected ADR hash uniqueness statement not found")
           text = text.replace(old, new, 1)
-          old = "   - changed content hash → upsert the source link, append the next immutable version, then advance the head."
-          new = "   - changed content hash → upsert the source link, append the next immutable version, then advance the head, even when that hash appeared in an older non-current version."
+          old = "changed content hash → upsert the source link, append the next immutable version, then advance the head."
+          new = "changed content hash → upsert the source link, append the next immutable version, then advance the head, even when that hash appeared in an older non-current version."
           if old not in text:
               raise SystemExit("expected ADR changed-content statement not found")
           adr.write_text(text.replace(old, new, 1))
