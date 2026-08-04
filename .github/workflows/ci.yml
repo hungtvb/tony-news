@@ -75,3 +75,24 @@ jobs:
           path: article-smoke.json
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Publisher structure diagnostics
+        id: publisher-structure-smoke
+        continue-on-error: true
+        shell: bash
+        run: |
+          set +e
+          node --experimental-strip-types apps/worker/src/article-structure-smoke.ts > article-structure.json 2>&1
+          status=$?
+          cat article-structure.json
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+          exit "$status"
+
+      - name: Upload publisher structure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: article-structure-evidence
+          path: article-structure.json
+          if-no-files-found: warn
+          retention-days: 14
