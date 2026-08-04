@@ -246,43 +246,43 @@ if (!databaseUrl) {
     });
 
     test("appends a version when content reverts to a previously seen hash", async () => {
-    await persistArticleSnapshotWithRetry(handle.repository, snapshot());
-    await persistArticleSnapshotWithRetry(
-      handle.repository,
-      snapshot({
-        contentHash: "hash-v2",
-        normalizedText: "Nội dung phiên bản hai đã được nguồn cập nhật.",
-        textLength: 48,
-        observedAt: new Date("2026-08-04T06:30:00Z"),
-      }),
-    );
+      await persistArticleSnapshotWithRetry(handle.repository, snapshot());
+      await persistArticleSnapshotWithRetry(
+        handle.repository,
+        snapshot({
+          contentHash: "hash-v2",
+          normalizedText: "Nội dung phiên bản hai đã được nguồn cập nhật.",
+          textLength: 48,
+          observedAt: new Date("2026-08-04T06:30:00Z"),
+        }),
+      );
 
-    const result = await persistArticleSnapshotWithRetry(
-      handle.repository,
-      snapshot({
-        contentHash: "hash-v1",
-        title: "Google khôi phục nội dung phiên bản trước",
-        observedAt: new Date("2026-08-04T07:00:00Z"),
-      }),
-    );
+      const result = await persistArticleSnapshotWithRetry(
+        handle.repository,
+        snapshot({
+          contentHash: "hash-v1",
+          title: "Google khôi phục nội dung phiên bản trước",
+          observedAt: new Date("2026-08-04T07:00:00Z"),
+        }),
+      );
 
-    assert.equal(result.outcome, "version-appended");
-    assert.equal(result.versionNumber, 3);
-    assert.equal(await rowCount(handle, articleVersions), 3);
+      assert.equal(result.outcome, "version-appended");
+      assert.equal(result.versionNumber, 3);
+      assert.equal(await rowCount(handle, articleVersions), 3);
 
-    const versionRows = await handle.database
-      .select({
-        versionNumber: articleVersions.versionNumber,
-        contentHash: articleVersions.contentHash,
-      })
-      .from(articleVersions)
-      .orderBy(articleVersions.versionNumber);
-    assert.deepEqual(versionRows, [
-      { versionNumber: 1, contentHash: "hash-v1" },
-      { versionNumber: 2, contentHash: "hash-v2" },
-      { versionNumber: 3, contentHash: "hash-v1" },
-    ]);
-  });
+      const versionRows = await handle.database
+        .select({
+          versionNumber: articleVersions.versionNumber,
+          contentHash: articleVersions.contentHash,
+        })
+        .from(articleVersions)
+        .orderBy(articleVersions.versionNumber);
+      assert.deepEqual(versionRows, [
+        { versionNumber: 1, contentHash: "hash-v1" },
+        { versionNumber: 2, contentHash: "hash-v2" },
+        { versionNumber: 3, contentHash: "hash-v1" },
+      ]);
+    });
 
     test("rolls back article insertion when source link persistence fails", async () => {
       await assert.rejects(
