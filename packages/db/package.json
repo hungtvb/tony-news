@@ -3,11 +3,13 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./node-postgres": "./src/node-postgres.ts",
     "./persistence": "./src/persistence.ts",
     "./schema": "./src/schema.ts",
     "./state-machine": "./src/state-machine.ts"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.2"
+    "drizzle-orm": "0.45.2",
+    "pg": "8.22.0"
   }
 }
