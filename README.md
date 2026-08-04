@@ -60,7 +60,41 @@ pnpm article:smoke -- --target vne-google-earth-ai
 pnpm article:smoke -- --json
 ```
 
-The JSON output contains metadata, extraction strategy, text length, paragraph count, and content hash. It intentionally excludes full article text.
+The JSON output contains metadata, extraction strategy, selector evidence, quality decision, text length, paragraph count, and content hash. It intentionally excludes full article text.
+
+Current Phase 0 content boundaries:
+
+- VnExpress: `article.fck_detail`
+- Tuổi Trẻ: `div.detail-content.afcbc-body`
+- Thanh Niên: generic article container fallback
+
+Only `qualityDecision: ready` is eligible for automatic downstream AI processing.
+
+## Structure diagnostics
+
+The diagnostics command emits tag/class candidates and JSON-LD keys without article text:
+
+```bash
+pnpm article:structure
+```
+
+This is used to investigate publisher template drift before changing selectors.
+
+## Cloudflare Browser Run fallback
+
+Browser Run `/markdown` is an optional, quality-gated fallback. It is never called for an article that passes direct extraction, and it is protected by publisher URL validation plus a per-run request budget.
+
+Set the following variables for a live comparison:
+
+```bash
+export CLOUDFLARE_ACCOUNT_ID=...
+export CLOUDFLARE_API_TOKEN=...
+pnpm browser-run:smoke
+```
+
+Without those values, the smoke command returns a machine-readable `skipped` result. CI artifacts contain metrics and hashes only, never Browser Run markdown.
+
+The regular polling path does not use Browser Run `/crawl`; crawl remains reserved for controlled discovery or backfill experiments.
 
 ## Verification
 
