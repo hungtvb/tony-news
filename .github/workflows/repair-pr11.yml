@@ -1,0 +1,154 @@
+name: Repair PR 11 persistence edge cases
+
+on:
+  push:
+    branches:
+      - feat/postgres-repository-integration
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: tony_news_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d tony_news_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/postgres-repository-integration
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Apply reviewed repair
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          schema = Path("packages/db/src/schema.ts")
+          text = schema.read_text()
+          old = '''    uniqueIndex("article_versions_article_hash_uq").on(
+              table.articleId,
+              table.contentHash,
+            ),
+          '''
+          if old not in text:
+              raise SystemExit("expected article hash unique index block not found")
+          schema.write_text(text.replace(old, "", 1))
+
+          adr = Path("docs/adr/0004-postgres-persistence-and-article-versioning.md")
+          text = adr.read_text()
+          old = "   - unique `(article_id, content_hash)`;"
+          new = "   - non-adjacent versions may repeat a content hash when a publisher restores previously published content;"
+          if old not in text:
+              raise SystemExit("expected ADR hash uniqueness statement not found")
+          text = text.replace(old, new, 1)
+          old = "   - changed content hash → upsert the source link, append the next immutable version, then advance the head."
+          new = "   - changed content hash → upsert the source link, append the next immutable version, then advance the head, even when that hash appeared in an older non-current version."
+          if old not in text:
+              raise SystemExit("expected ADR changed-content statement not found")
+          adr.write_text(text.replace(old, new, 1))
+
+          test_file = Path("packages/db/src/node-postgres.integration.ts")
+          text = test_file.read_text()
+          marker = '    test("rolls back article insertion when source link persistence fails", async () => {'
+          if marker not in text:
+              raise SystemExit("expected rollback test marker not found")
+          regression = '''    test("appends a version when content reverts to a previously seen hash", async () => {
+              await persistArticleSnapshotWithRetry(handle.repository, snapshot());
+              await persistArticleSnapshotWithRetry(
+                handle.repository,
+                snapshot({
+                  contentHash: "hash-v2",
+                  normalizedText: "Nội dung phiên bản hai đã được nguồn cập nhật.",
+                  textLength: 48,
+                  observedAt: new Date("2026-08-04T06:30:00Z"),
+                }),
+              );
+
+              const result = await persistArticleSnapshotWithRetry(
+                handle.repository,
+                snapshot({
+                  contentHash: "hash-v1",
+                  title: "Google khôi phục nội dung phiên bản trước",
+                  observedAt: new Date("2026-08-04T07:00:00Z"),
+                }),
+              );
+
+              assert.equal(result.outcome, "version-appended");
+              assert.equal(result.versionNumber, 3);
+              assert.equal(await rowCount(handle, articleVersions), 3);
+
+              const versionRows = await handle.database
+                .select({
+                  versionNumber: articleVersions.versionNumber,
+                  contentHash: articleVersions.contentHash,
+                })
+                .from(articleVersions)
+                .orderBy(articleVersions.versionNumber);
+              assert.deepEqual(versionRows, [
+                { versionNumber: 1, contentHash: "hash-v1" },
+                { versionNumber: 2, contentHash: "hash-v2" },
+                { versionNumber: 3, contentHash: "hash-v1" },
+              ]);
+            });
+
+          '''
+          test_file.write_text(text.replace(marker, regression + marker, 1))
+
+          ci = Path(".github/workflows/ci.yml")
+          text = ci.read_text()
+          old = "run: pnpm install --no-frozen-lockfile"
+          new = "run: pnpm install --frozen-lockfile"
+          if old not in text:
+              raise SystemExit("expected CI install command not found")
+          ci.write_text(text.replace(old, new, 1))
+          PY
+
+      - name: Install and generate migration
+        run: |
+          pnpm install --no-frozen-lockfile
+          pnpm db:generate
+
+      - name: Verify repaired branch
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/tony_news_test
+        run: |
+          pnpm typecheck
+          pnpm test
+          pnpm test:integration
+
+      - name: Commit generated repair
+        run: |
+          rm .github/workflows/repair-pr11.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No repair changes to commit"
+            exit 0
+          fi
+          git commit -m "fix: preserve article history across content reverts [pr11-fix]"
+          git push origin HEAD:feat/postgres-repository-integration
