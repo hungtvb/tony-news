@@ -5,10 +5,21 @@
 For every non-trivial engineering task:
 
 1. Read `SKILL_INDEX.md`.
-2. Resolve the current target branch, exact HEAD SHA, active issue/PR, and verification commands.
-3. Load one primary skill and at most two supporting skills.
-4. Inspect the owning code, tests, ADRs, and benchmark manifest before changing behavior.
-5. Run focused checks first, then the repository-wide gates.
+2. Read `docs/workflow/plan-and-task-first.md` and identify the active GitHub tracking issue before implementation.
+3. Resolve the current target branch, exact HEAD SHA, active issue/PR, and verification commands.
+4. Load one primary skill and at most two supporting skills.
+5. Inspect the owning code, tests, ADRs, and benchmark manifest before changing behavior.
+6. Run focused checks first, then the repository-wide gates.
+
+## Planning and task tracking
+
+- Every non-trivial implementation, research, design, infrastructure, or documentation item starts with a written plan.
+- Create or identify a GitHub issue before changing code or project artifacts.
+- Large work uses a parent tracking issue plus child issues or checklist tasks.
+- Link commits and pull requests to the active issue.
+- Record progress, decisions, blockers, test results, and evidence in the issue.
+- Do not silently expand scope; create or update a task before implementing newly discovered work.
+- Repository documentation and GitHub issues are authoritative across sessions; conversation memory is supplemental only.
 
 ## Product invariants
 
