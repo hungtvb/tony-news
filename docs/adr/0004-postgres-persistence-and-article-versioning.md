@@ -61,17 +61,20 @@ It also creates the supporting PostgreSQL enums, foreign keys, partial/composite
 
 ## Verification
 
-The persistence contract is tested with a deterministic in-memory transactional repository. Tests prove:
+The domain contract remains covered by deterministic unit tests. The concrete Drizzle/node-postgres repository is also exercised against PostgreSQL 17 in CI. The combined suites prove:
 
 - first ingestion creates one article, one source link, and one version;
 - repeated unchanged ingestion does not create a duplicate version;
 - metadata and canonical identity can refresh without changing the version;
 - changed content appends exactly one immutable version and advances the head;
+- content restored to a previously observed non-current hash appends a new immutable version;
 - the same canonical article discovered through another feed creates another `article_sources` link but not another article/version;
+- concurrent first discovery is re-read/retried without duplicate rows;
+- article, provenance, and version writes roll back together when a transaction fails;
 - non-ready extraction output is rejected before opening a transaction;
 - ingestion status transitions and retry decisions are validated.
 
-The initial PostgreSQL migration was generated and committed by Drizzle Kit in a trusted GitHub Actions run, then CI was returned to read-only migration-drift verification.
+CI applies migrations from an empty PostgreSQL database, enforces a frozen pnpm lockfile, and regenerates Drizzle metadata to detect migration drift.
 
 ## Consequences
 
@@ -87,15 +90,14 @@ The initial PostgreSQL migration was generated and committed by Drizzle Kit in a
 ### Negative
 
 - Article text versions consume more storage than overwriting a single row.
-- A concrete Drizzle/Postgres repository adapter is still required before deployment.
 - Database migrations have not yet been applied to a production or preview Supabase project.
-- Concurrent insert races must be handled by the concrete adapter using database unique violations and transaction retry/re-read logic.
-- Canonical URL conflicts across genuinely distinct publisher articles need an explicit collision policy in the concrete adapter.
+- Production connection limits, transaction isolation, and Hyperdrive behavior still require environment-specific evidence.
+- Canonical URL conflicts across genuinely distinct publisher articles need an explicit collision policy.
 
 ## Deferred
 
 - Live Supabase preview migration and rollback evidence.
-- Concrete Drizzle repository implementation and connection pooling.
+- Cloudflare Hyperdrive resource creation and production connection tuning.
 - Cloudflare Queue consumers.
 - Story, claim, summary, and citation tables.
 - Retention/archival policy for historical normalized text and raw artifacts.
