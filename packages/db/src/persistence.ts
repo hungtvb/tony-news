@@ -64,7 +64,7 @@ export interface NewArticleVersion {
   rawArtifactKey?: string;
 }
 
-export interface UpdateArticleHead {
+export interface UpdateArticleHead extends ArticleIdentity {
   articleId: string;
   title: string;
   author?: string;
@@ -81,7 +81,6 @@ export interface ArticlePersistenceTransaction {
   insertArticle(input: NewArticleHead): Promise<StoredArticleHead>;
   insertArticleVersion(input: NewArticleVersion): Promise<void>;
   updateArticleHead(input: UpdateArticleHead): Promise<void>;
-  touchArticle(articleId: string, observedAt: Date): Promise<void>;
 }
 
 export interface ArticlePersistenceRepository {
@@ -96,7 +95,33 @@ export interface PersistArticleResult {
   versionNumber: number;
 }
 
-function optionalFields(snapshot: ArticleSnapshot): {
+function identityFields(identity: ArticleIdentity): ArticleIdentity {
+  const result: ArticleIdentity = {
+    sourceId: identity.sourceId,
+    canonicalUrl: identity.canonicalUrl,
+  };
+  if (identity.sourceArticleId) result.sourceArticleId = identity.sourceArticleId;
+  return result;
+}
+
+function headOptionalFields(snapshot: ArticleSnapshot): {
+  author?: string;
+  publishedAt?: Date;
+  sourceUpdatedAt?: Date;
+} {
+  const result: {
+    author?: string;
+    publishedAt?: Date;
+    sourceUpdatedAt?: Date;
+  } = {};
+
+  if (snapshot.author) result.author = snapshot.author;
+  if (snapshot.publishedAt) result.publishedAt = snapshot.publishedAt;
+  if (snapshot.sourceUpdatedAt) result.sourceUpdatedAt = snapshot.sourceUpdatedAt;
+  return result;
+}
+
+function versionOptionalFields(snapshot: ArticleSnapshot): {
   author?: string;
   publishedAt?: Date;
   sourceUpdatedAt?: Date;
@@ -104,18 +129,17 @@ function optionalFields(snapshot: ArticleSnapshot): {
   qualityWarnings?: string[];
   rawArtifactKey?: string;
 } {
-  const result: {
+  const result = {
+    ...headOptionalFields(snapshot),
+  } as {
     author?: string;
     publishedAt?: Date;
     sourceUpdatedAt?: Date;
     extractionSelector?: string;
     qualityWarnings?: string[];
     rawArtifactKey?: string;
-  } = {};
+  };
 
-  if (snapshot.author) result.author = snapshot.author;
-  if (snapshot.publishedAt) result.publishedAt = snapshot.publishedAt;
-  if (snapshot.sourceUpdatedAt) result.sourceUpdatedAt = snapshot.sourceUpdatedAt;
   if (snapshot.extractionSelector) {
     result.extractionSelector = snapshot.extractionSelector;
   }
@@ -123,16 +147,6 @@ function optionalFields(snapshot: ArticleSnapshot): {
     result.qualityWarnings = [...snapshot.qualityWarnings];
   }
   if (snapshot.rawArtifactKey) result.rawArtifactKey = snapshot.rawArtifactKey;
-
-  return result;
-}
-
-function identityFields(identity: ArticleIdentity): ArticleIdentity {
-  const result: ArticleIdentity = {
-    sourceId: identity.sourceId,
-    canonicalUrl: identity.canonicalUrl,
-  };
-  if (identity.sourceArticleId) result.sourceArticleId = identity.sourceArticleId;
   return result;
 }
 
@@ -152,7 +166,25 @@ function versionInput(
     paragraphCount: snapshot.paragraphCount,
     extractionStrategy: snapshot.extractionStrategy,
     qualityDecision: snapshot.qualityDecision,
-    ...optionalFields(snapshot),
+    ...versionOptionalFields(snapshot),
+  };
+}
+
+function headUpdateInput(
+  articleId: string,
+  currentContentHash: string,
+  currentVersionNumber: number,
+  snapshot: ArticleSnapshot,
+): UpdateArticleHead {
+  return {
+    articleId,
+    ...identityFields(snapshot),
+    title: snapshot.title,
+    authorStatus: snapshot.authorStatus,
+    currentContentHash,
+    currentVersionNumber,
+    lastSeenAt: snapshot.observedAt,
+    ...headOptionalFields(snapshot),
   };
 }
 
@@ -179,7 +211,7 @@ export async function persistArticleSnapshot(
         currentVersionNumber: 1,
         firstSeenAt: snapshot.observedAt,
         lastSeenAt: snapshot.observedAt,
-        ...optionalFields(snapshot),
+        ...headOptionalFields(snapshot),
       });
 
       await transaction.insertArticleVersion(
@@ -194,7 +226,14 @@ export async function persistArticleSnapshot(
     }
 
     if (existing.currentContentHash === snapshot.contentHash) {
-      await transaction.touchArticle(existing.id, snapshot.observedAt);
+      await transaction.updateArticleHead(
+        headUpdateInput(
+          existing.id,
+          existing.currentContentHash,
+          existing.currentVersionNumber,
+          snapshot,
+        ),
+      );
       return {
         outcome: "unchanged",
         articleId: existing.id,
@@ -206,15 +245,14 @@ export async function persistArticleSnapshot(
     await transaction.insertArticleVersion(
       versionInput(existing.id, nextVersionNumber, snapshot),
     );
-    await transaction.updateArticleHead({
-      articleId: existing.id,
-      title: snapshot.title,
-      authorStatus: snapshot.authorStatus,
-      currentContentHash: snapshot.contentHash,
-      currentVersionNumber: nextVersionNumber,
-      lastSeenAt: snapshot.observedAt,
-      ...optionalFields(snapshot),
-    });
+    await transaction.updateArticleHead(
+      headUpdateInput(
+        existing.id,
+        snapshot.contentHash,
+        nextVersionNumber,
+        snapshot,
+      ),
+    );
 
     return {
       outcome: "version-appended",
