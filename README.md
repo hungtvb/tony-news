@@ -23,6 +23,8 @@ apps/
   worker/          Phase 0 operational CLIs and future queue consumers
   web/             Reader/admin application boundary
 packages/
+  benchmarks/      Versioned benchmark contracts and integrity policy
+  clustering/      Conservative event-relation rules and evaluation
   db/              Drizzle schema, migrations, persistence contracts
   ingestion/       Source registry, RSS parsing and acquisition contracts
 docs/
@@ -112,6 +114,26 @@ DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/tony_news_test \
 
 The repository exposes a Node/CI pool factory and a Cloudflare Hyperdrive client factory. Production Supabase and Hyperdrive resources have not been created or modified.
 
+## Conservative event relations
+
+The first clustering slice is a deterministic metadata-only relation engine. It classifies article pairs as:
+
+- `same-event-candidate`;
+- `related-not-merge`;
+- `different-event`;
+- `uncertain`.
+
+A candidate result is not an automatic cluster merge. Match results, post-match reactions, player milestones, and preview/result boundaries remain distinct story nodes when appropriate. Category, date, or title similarity alone cannot create a same-event candidate.
+
+Evaluate the current benchmark contract with:
+
+```bash
+pnpm cluster:evaluate
+pnpm cluster:evaluate -- --json --fail-on-provisional-mismatch
+```
+
+The evaluator reports pair signals, reason codes, predicted relations, expected provisional relations, and label status. Current benchmark labels remain provisional and are excluded from accepted-label metrics. Hard-negative regressions remain blocking safety failures.
+
 ## Structure diagnostics
 
 The diagnostics command emits tag/class candidates and JSON-LD keys without article text:
@@ -144,10 +166,14 @@ The regular polling path does not use Browser Run `/crawl`; crawl remains reserv
 pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
+pnpm benchmark:validate
+pnpm cluster:evaluate -- --json --fail-on-provisional-mismatch
 pnpm db:generate
 status=$(git status --porcelain -- packages/db/drizzle)
 test -z "$status"
 ```
+
+Database changes also require the PostgreSQL integration suite. Live-source and Browser Run evidence remain separate from deterministic unit, benchmark, and migration gates.
 
 ## Documentation
 
