@@ -6,13 +6,16 @@ Status: Active project rule
 
 Before starting any non-trivial Tony News implementation, research, design, infrastructure, or documentation work:
 
-1. Write a concise execution plan covering the goal, scope, sequence, acceptance criteria, risks, and verification evidence.
-2. Create or identify a GitHub tracking issue before changing code or project artifacts.
-3. Split large work into child issues or checklist tasks with explicit dependencies.
-4. Link commits and pull requests to the tracking issue.
-5. Update the issue with progress, decisions, blockers, test results, and evidence.
-6. Do not silently expand scope. Record newly discovered work as a follow-up task before implementing it.
-7. Close work only when acceptance criteria and verification evidence are recorded.
+1. Load `/Skills/project-session-bootstrap/SKILL.md`, read `AGENTS.md`, and read the canonical Tony News project index in File Library.
+2. Resolve the exact target branch/commit, active issue, open pull requests, relevant ADRs, benchmark manifests, design decisions, and verification commands.
+3. Write a concise execution plan covering the goal, scope, sequence, acceptance criteria, risks, and verification evidence.
+4. Create or identify a GitHub tracking issue before changing code or project artifacts.
+5. Split large work into child issues or checklist tasks with explicit dependencies.
+6. Select one primary skill and at most two supporting skills. The mandatory bootstrap skill does not count against this limit.
+7. Link commits and pull requests to the tracking issue.
+8. Update the issue with progress, decisions, blockers, test results, and evidence.
+9. Do not silently expand scope. Record newly discovered work as a follow-up task before implementing it.
+10. Close work only when acceptance criteria and verification evidence are recorded.
 
 ## Small-change exception
 
@@ -20,4 +23,16 @@ Trivial typo-only or formatting-only edits may use a compact plan in the commit 
 
 ## Session continuity
 
-Agents must read `AGENTS.md`, this workflow, the active tracking issue, and linked plans at the beginning of a new session. Conversation memory is supplementary and must not be treated as the project source of truth.
+Agents must read, in order:
+
+1. `/Skills/project-session-bootstrap/SKILL.md` in File Library;
+2. `AGENTS.md`;
+3. `/Tony News/SKILL_INDEX.md` in File Library, with `Tony-News-SKILL_INDEX.md` accepted only as the legacy migration title;
+4. this workflow;
+5. the active tracking issue and linked plans, ADRs, benchmark manifests, design decisions, and verification evidence.
+
+Repository state and GitHub issues are authoritative for project status. File Library is authoritative for skill contracts. Conversation memory is supplementary and must not be treated as the project source of truth.
+
+## Verification discipline
+
+Run the smallest targeted check first, then every repository or runtime gate required by the owning domain. Distinguish unit, PostgreSQL integration, migration drift, benchmark validation, live publisher, Browser Run, UI, deployment, and manual-review evidence. A skipped or unavailable gate must remain explicitly unverified.
