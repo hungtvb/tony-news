@@ -51,6 +51,12 @@ interface PostgreSqlErrorShape {
   cause?: unknown;
 }
 
+const RETRYABLE_PERSISTENCE_ERROR_CODES = new Set([
+  "23505", // unique_violation: concurrent first discovery can race on identity rows
+  "40001", // serialization_failure: the complete transaction must be replayed
+  "40P01", // deadlock_detected: PostgreSQL aborts one participant for retry
+]);
+
 function assertPostgresConnectionString(value: string): string {
   const trimmed = value.trim();
   if (!/^postgres(?:ql)?:\/\//i.test(trimmed)) {
@@ -84,6 +90,11 @@ export function postgresErrorCode(error: unknown): string | undefined {
 
 export function isUniqueViolation(error: unknown): boolean {
   return postgresErrorCode(error) === "23505";
+}
+
+export function isRetryablePersistenceError(error: unknown): boolean {
+  const code = postgresErrorCode(error);
+  return code !== undefined && RETRYABLE_PERSISTENCE_ERROR_CODES.has(code);
 }
 
 export function uniqueViolationConstraint(error: unknown): string | undefined {
@@ -352,7 +363,9 @@ export async function persistArticleSnapshotWithRetry(
       return await persistArticleSnapshot(repository, snapshot);
     } catch (error: unknown) {
       lastError = error;
-      if (!isUniqueViolation(error) || attempt === maxAttempts) throw error;
+      if (!isRetryablePersistenceError(error) || attempt === maxAttempts) {
+        throw error;
+      }
       await delay(delayMs * attempt);
     }
   }
