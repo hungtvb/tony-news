@@ -94,10 +94,12 @@ test("provisional results are reported separately from accepted metrics", () => 
     article("D", ["Google", "Meta", "Úc"], {
       category: "technology",
       contentType: "policy-report",
+      title: "Úc yêu cầu nền tảng trả tiền cho báo chí",
     }),
     article("E", ["Liên minh châu Âu", "AI", "deepfake"], {
       category: "technology",
       contentType: "policy-report",
+      title: "EU yêu cầu nội dung AI và deepfake phải gắn nhãn",
     }),
   ];
   const report = evaluateEventRelations(
