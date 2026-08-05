@@ -52,6 +52,9 @@ jobs:
       - name: Validate benchmark contract
         run: pnpm benchmark:validate -- --json
 
+      - name: Evaluate conservative event relations
+        run: pnpm cluster:evaluate -- --json --fail-on-provisional-mismatch
+
       - name: Verify database migration is reproducible
         shell: bash
         run: |
