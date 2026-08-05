@@ -72,6 +72,27 @@ test("one specific anchor plus the same content family remains a candidate, not 
   ]);
 });
 
+test("one broad country anchor cannot create a same-event candidate", () => {
+  const nationalTeam = article({
+    id: "A",
+    title: "Việt Nam thắng Indonesia tại ASEAN Cup",
+    entities: ["Việt Nam", "Indonesia", "ASEAN Cup"],
+  });
+  const youthTeam = article({
+    id: "B",
+    title: "U19 Việt Nam chuẩn bị đấu Thái Lan",
+    entities: ["Việt Nam", "Thái Lan", "U19"],
+  });
+
+  const decision = classifyEventRelation(nationalTeam, youthTeam);
+
+  assert.equal(decision.relation, "uncertain");
+  assert.deepEqual(decision.reasons, [
+    "broad-single-entity",
+    "insufficient-evidence",
+  ]);
+});
+
 test("post-match reaction remains related but is protected from merging with the result", () => {
   const result = article({
     id: "A",
