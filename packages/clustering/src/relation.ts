@@ -16,6 +16,7 @@ export type EventRelationReason =
   | "protected-content-boundary"
   | "multiple-shared-entities"
   | "single-shared-entity-same-family"
+  | "broad-single-entity"
   | "no-shared-entity"
   | "weak-title-overlap"
   | "date-outside-window"
@@ -45,6 +46,19 @@ const GENERIC_ENTITY_KEYS = new Set([
   "nguoi ham mo",
   "phong ve",
   "the thao",
+]);
+
+const BROAD_SINGLE_ENTITY_KEYS = new Set([
+  "apple",
+  "google",
+  "ha noi",
+  "indonesia",
+  "meta",
+  "netflix",
+  "samsung",
+  "trung quoc",
+  "uc",
+  "viet nam",
 ]);
 
 const TITLE_STOP_WORDS = new Set([
@@ -241,8 +255,11 @@ export function classifyEventRelation(
     };
   }
 
+  const singleSharedEntity = signals.sharedEntities[0];
   if (
     signals.sharedEntities.length === 1 &&
+    singleSharedEntity !== undefined &&
+    !BROAD_SINGLE_ENTITY_KEYS.has(singleSharedEntity) &&
     signals.sameContentFamily &&
     signals.dateDistanceDays <= 1
   ) {
@@ -250,6 +267,19 @@ export function classifyEventRelation(
       relation: "same-event-candidate",
       confidence: "medium",
       reasons: ["single-shared-entity-same-family"],
+      signals,
+    };
+  }
+
+  if (
+    signals.sharedEntities.length === 1 &&
+    singleSharedEntity !== undefined &&
+    BROAD_SINGLE_ENTITY_KEYS.has(singleSharedEntity)
+  ) {
+    return {
+      relation: "uncertain",
+      confidence: "low",
+      reasons: ["broad-single-entity", "insufficient-evidence"],
       signals,
     };
   }
