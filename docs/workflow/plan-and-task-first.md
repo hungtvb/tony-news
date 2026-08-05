@@ -6,7 +6,7 @@ Status: Active project rule
 
 Before starting any non-trivial Tony News implementation, research, design, infrastructure, or documentation work:
 
-1. Load `/Skills/project-session-bootstrap/SKILL.md`, read `AGENTS.md`, and read the canonical Tony News project index in File Library.
+1. Load `/Skills/project-session-bootstrap/SKILL.md`, read `AGENTS.md`, and search File Library for the exact current Tony News project index filename recorded there.
 2. Resolve the exact target branch/commit, active issue, open pull requests, relevant ADRs, benchmark manifests, design decisions, and verification commands.
 3. Write a concise execution plan covering the goal, scope, sequence, acceptance criteria, risks, and verification evidence.
 4. Create or identify a GitHub tracking issue before changing code or project artifacts.
@@ -27,9 +27,11 @@ Agents must read, in order:
 
 1. `/Skills/project-session-bootstrap/SKILL.md` in File Library;
 2. `AGENTS.md`;
-3. `/Tony News/SKILL_INDEX.md` in File Library, with `Tony-News-SKILL_INDEX.md` accepted only as the legacy migration title;
+3. the exact project-prefixed Tony News index filename recorded in `AGENTS.md`;
 4. this workflow;
 5. the active tracking issue and linked plans, ADRs, benchmark manifests, design decisions, and verification evidence.
+
+File Library is treated as a flat searchable catalog. Generic basenames and conceptual folder paths are not accepted as proof of discovery. Historical Tony News index versions must not be selected when `AGENTS.md` names a newer verified file.
 
 Repository state and GitHub issues are authoritative for project status. File Library is authoritative for skill contracts. Conversation memory is supplementary and must not be treated as the project source of truth.
 

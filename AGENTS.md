@@ -5,21 +5,36 @@
 For every non-trivial Tony News session:
 
 1. Load the shared Library skill `/Skills/project-session-bootstrap/SKILL.md`.
-2. Read the canonical project index `/Tony News/SKILL_INDEX.md` in File Library. During migration, the legacy Library title `Tony-News-SKILL_INDEX.md` refers to the same project index.
+2. Search File Library for the exact project index filename `Tony-News-SKILL_INDEX-v1.1.1.md`.
 3. Read [`docs/workflow/plan-and-task-first.md`](docs/workflow/plan-and-task-first.md).
 4. Resolve the current default-branch HEAD, active GitHub issue, open pull requests, relevant ADRs, benchmark manifests, and exact verification commands.
 5. Select one primary skill and at most two supporting skills. `project-session-bootstrap` is mandatory bootstrap and does not count against this limit.
 
 Repository state, GitHub issues, and exact-revision evidence are authoritative. Conversation history and assistant memory are supplemental only.
 
+## File Library storage contract
+
+File Library is treated as a flat searchable catalog, not as a reliable nested filesystem. Generic basenames such as `SKILL_INDEX.md` and `SKILL.md` collide across projects, so Tony News uses project-prefixed filenames as the direct-readable locator contract.
+
+The currently verified project files are:
+
+- `Tony-News-SKILL_INDEX-v1.1.1.md`
+- `Tony-News-news-source-acquisition-SKILL-v1.0.0.md`
+- `Tony-News-news-event-clustering-SKILL-v1.0.0.md`
+- `Tony-News-news-citation-safe-synthesis-SKILL-v1.0.0.md`
+- `Tony-News-news-benchmark-and-evidence-SKILL-v1.0.0.md`
+- `Tony-News-SKILL_VALIDATION-v1.1.1.md`
+
+`Tony-News-SKILL_INDEX.md` and `Tony-News-SKILL_INDEX-v1.1.0.md` are historical and must not be selected for a new session. When the v1.1.1 index describes conceptual `/Tony News/...` paths, use the exact filenames above as the File Library locator; the index remains authoritative for routing and domain boundaries.
+
 ## Skill ownership
 
-Project-specific news skills are maintained in the Tony News File Library folder, not copied into this repository:
+Project-specific news skills are maintained in File Library, not copied into this repository:
 
-- `news-source-acquisition` — RSS, article fetching, normalization, publisher adapters, quality decisions, and guarded Browser Run fallback.
-- `news-event-clustering` — event identity, duplicate relations, merge/split behavior, developing-story timelines, and correction history.
-- `news-citation-safe-synthesis` — claim ledgers, uncertainty, citations, source disagreement, summaries, and safe AI degradation.
-- `news-benchmark-and-evidence` — fixtures, human-reviewed labels, metrics, kill tests, and exact-revision evidence.
+- `news-source-acquisition` — load `Tony-News-news-source-acquisition-SKILL-v1.0.0.md`; owns RSS, article fetching, normalization, publisher adapters, quality decisions, and guarded Browser Run fallback.
+- `news-event-clustering` — load `Tony-News-news-event-clustering-SKILL-v1.0.0.md`; owns event identity, duplicate relations, merge/split behavior, developing-story timelines, and correction history.
+- `news-citation-safe-synthesis` — load `Tony-News-news-citation-safe-synthesis-SKILL-v1.0.0.md`; owns claim ledgers, uncertainty, citations, source disagreement, summaries, and safe AI degradation.
+- `news-benchmark-and-evidence` — load `Tony-News-news-benchmark-and-evidence-SKILL-v1.0.0.md`; owns fixtures, human-reviewed labels, metrics, kill tests, and exact-revision evidence.
 
 Generic engineering, review, release, security, migration, and product-design skills remain under `/Skills` in File Library.
 
